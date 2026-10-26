@@ -62,6 +62,17 @@
     <button id="run" type="button">Run on devnet</button>
     <pre id="log">Loading page.</pre>
   </main>
+  <script type="importmap">
+    {
+      "imports": {
+        "@solana/zk-sdk/bundler": "https://cdn.jsdelivr.net/npm/@solana/zk-sdk@0.4.2/dist/web/index.js",
+        "@solana/kit": "https://esm.sh/@solana/kit@6.10.0",
+        "@solana/kit/program-client-core": "https://esm.sh/@solana/kit@6.10.0/program-client-core",
+        "@solana-program/zk-elgamal-proof": "https://esm.sh/@solana-program/zk-elgamal-proof@0.2.0?deps=@solana/kit@6.10.0",
+        "@noble/curves/ed25519": "https://esm.sh/@noble/curves@1.9.7/ed25519"
+      }
+    }
+  </script>
   <script>
     if (window.__sealedBound) {
       throw new Error("sealed test already started");
@@ -96,9 +107,10 @@
       const signerMod = await import("https://esm.sh/@solana/kit-plugin-signer@0.10.0");
       const rpcMod = await import("https://esm.sh/@solana/kit-plugin-rpc@0.11.1");
       const planMod = await import("https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0");
-      const zk = await import("https://esm.sh/@solana/zk-sdk@0.4.2");
-      const token = await import("https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2");
-      const confidential = await import("https://esm.sh/@solana-program/token-2022@0.12.0/confidential?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2");
+      const zk = await import("https://cdn.jsdelivr.net/npm/@solana/zk-sdk@0.4.2/dist/web/index.js");
+      if (typeof zk.default === "function") await zk.default();
+      const token = await import("https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0");
+      const confidential = await import("https://cdn.jsdelivr.net/npm/@solana-program/token-2022@0.12.0/dist/src/confidential.mjs");
       AccountRole = kit.AccountRole;
       address = kit.address;
       createClient = kit.createClient;
@@ -141,7 +153,7 @@
     const saved = localStorage.getItem("sealed-program");
     if (saved) programInput.value = saved;
     if (location.protocol === "file:") {
-      logEl.textContent = "This file was opened from disk, so the Solana libraries cannot load. Open the https preview instead.";
+      logEl.textContent = "This file was opened from disk, so the Solana libraries cannot load. Use the local page at http://127.0.0.1:8765/.";
     } else {
       logEl.textContent = "Ready. Paste the program id and press Run.";
     }
@@ -262,7 +274,11 @@
         log("Wallet X " + x.address);
         log("This test does not use the Playground wallet.");
         log("Requesting 0.1 devnet SOL for account rent and the 0.03 SOL deposit.");
-        await client.rpc.requestAirdrop(x.address, lamports(100_000_000n)).send();
+        try {
+          await client.rpc.requestAirdrop(x.address, lamports(100_000_000n)).send();
+        } catch (error) {
+          throw new Error("Devnet will not airdrop to " + x.address + ". The public faucet is closed. This run stopped before any SOL moved.");
+        }
         await waitForLamports(client.rpc, x.address, 60_000_000n);
 
         const auditor = await confidentialKeys(auditorSigner);
