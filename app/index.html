@@ -60,43 +60,73 @@
     <label for="program">Program id</label>
     <input id="program" spellcheck="false" placeholder="Program id from declare_id" />
     <button id="run" type="button">Run on devnet</button>
-    <pre id="log">Waiting.</pre>
+    <pre id="log">Loading page.</pre>
   </main>
-  <script type="module">
-    import {
-      AccountRole,
-      address,
-      createClient,
-      generateKeyPairSigner,
-      getAddressEncoder,
-      getProgramDerivedAddress,
-      lamports,
-    } from "https://esm.sh/@solana/kit@6.10.0";
-    import { signer as signerPlugin } from "https://esm.sh/@solana/kit-plugin-signer@0.10.0";
-    import { solanaRpc } from "https://esm.sh/@solana/kit-plugin-rpc@0.11.1";
-    import { planAndSendTransactions } from "https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0";
-    import {
-      AeKey,
-      ElGamalKeypair,
-      ElGamalSecretKey,
-    } from "https://esm.sh/@solana/zk-sdk@0.4.2";
-    import {
-      fetchToken,
-      getConfidentialDepositInstruction,
-    } from "https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2";
-    import {
-      deriveAeKey,
-      deriveElGamalKeypair,
-      getApplyConfidentialPendingBalanceInstructionFromToken,
-      getConfidentialTransferInstructionPlan,
-      getConfidentialWithdrawInstructionPlan,
-      getCreateConfidentialTransferAccountInstructionPlan,
-    } from "https://esm.sh/@solana-program/token-2022@0.12.0/confidential?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2";
+  <script>
+    if (window.__sealedBound) {
+      throw new Error("sealed test already started");
+    }
+    window.__sealedBound = true;
 
-    const TOKEN_2022 = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
-    const SYSTEM = address("11111111111111111111111111111111");
-    const RENT = address("SysvarRent111111111111111111111111111111111");
-    const ATA = address("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+    let AccountRole;
+    let address;
+    let createClient;
+    let generateKeyPairSigner;
+    let getAddressEncoder;
+    let getProgramDerivedAddress;
+    let lamports;
+    let signerPlugin;
+    let solanaRpc;
+    let planAndSendTransactions;
+    let AeKey;
+    let ElGamalKeypair;
+    let ElGamalSecretKey;
+    let fetchToken;
+    let getConfidentialDepositInstruction;
+    let deriveAeKey;
+    let deriveElGamalKeypair;
+    let getApplyConfidentialPendingBalanceInstructionFromToken;
+    let getConfidentialTransferInstructionPlan;
+    let getConfidentialWithdrawInstructionPlan;
+    let getCreateConfidentialTransferAccountInstructionPlan;
+    let encodeAddress;
+
+    async function loadLibraries() {
+      const kit = await import("https://esm.sh/@solana/kit@6.10.0");
+      const signerMod = await import("https://esm.sh/@solana/kit-plugin-signer@0.10.0");
+      const rpcMod = await import("https://esm.sh/@solana/kit-plugin-rpc@0.11.1");
+      const planMod = await import("https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0");
+      const zk = await import("https://esm.sh/@solana/zk-sdk@0.4.2");
+      const token = await import("https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2");
+      const confidential = await import("https://esm.sh/@solana-program/token-2022@0.12.0/confidential?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2");
+      AccountRole = kit.AccountRole;
+      address = kit.address;
+      createClient = kit.createClient;
+      generateKeyPairSigner = kit.generateKeyPairSigner;
+      getAddressEncoder = kit.getAddressEncoder;
+      getProgramDerivedAddress = kit.getProgramDerivedAddress;
+      lamports = kit.lamports;
+      signerPlugin = signerMod.signer;
+      solanaRpc = rpcMod.solanaRpc;
+      planAndSendTransactions = planMod.planAndSendTransactions;
+      AeKey = zk.AeKey;
+      ElGamalKeypair = zk.ElGamalKeypair;
+      ElGamalSecretKey = zk.ElGamalSecretKey;
+      fetchToken = token.fetchToken;
+      getConfidentialDepositInstruction = token.getConfidentialDepositInstruction;
+      deriveAeKey = confidential.deriveAeKey;
+      deriveElGamalKeypair = confidential.deriveElGamalKeypair;
+      getApplyConfidentialPendingBalanceInstructionFromToken = confidential.getApplyConfidentialPendingBalanceInstructionFromToken;
+      getConfidentialTransferInstructionPlan = confidential.getConfidentialTransferInstructionPlan;
+      getConfidentialWithdrawInstructionPlan = confidential.getConfidentialWithdrawInstructionPlan;
+      getCreateConfidentialTransferAccountInstructionPlan = confidential.getCreateConfidentialTransferAccountInstructionPlan;
+      encodeAddress = getAddressEncoder().encode.bind(getAddressEncoder());
+    }
+
+    const TOKEN_2022_ADDRESS = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
+    const SYSTEM_ADDRESS = "11111111111111111111111111111111";
+    const RENT_ADDRESS = "SysvarRent111111111111111111111111111111111";
+    const ATA_ADDRESS = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
     const SHIELD = 30_000_000n;
     const SEND = 30_000_000n;
     const DISC = {
@@ -110,6 +140,11 @@
     const runButton = document.querySelector("#run");
     const saved = localStorage.getItem("sealed-program");
     if (saved) programInput.value = saved;
+    if (location.protocol === "file:") {
+      logEl.textContent = "This file was opened from disk, so the Solana libraries cannot load. Open the https preview instead.";
+    } else {
+      logEl.textContent = "Ready. Paste the program id and press Run.";
+    }
 
     const lines = [];
     function log(line) {
@@ -137,12 +172,10 @@
       return who ? { address: addr, role, signer: who } : { address: addr, role };
     }
 
-    const encodeAddress = getAddressEncoder().encode.bind(getAddressEncoder());
-
     async function associatedToken(owner, mint) {
       const [token] = await getProgramDerivedAddress({
-        programAddress: ATA,
-        seeds: [encodeAddress(owner), encodeAddress(TOKEN_2022), encodeAddress(mint)],
+        programAddress: address(ATA_ADDRESS),
+        seeds: [encodeAddress(owner), encodeAddress(address(TOKEN_2022_ADDRESS)), encodeAddress(mint)],
       });
       return token;
     }
@@ -197,8 +230,16 @@
       lines.length = 0;
       runButton.disabled = true;
       try {
-        const program = address(programInput.value.trim());
-        localStorage.setItem("sealed-program", programInput.value.trim());
+        const programText = programInput.value.trim();
+        if (!programText) throw new Error("Paste the program id first.");
+        localStorage.setItem("sealed-program", programText);
+
+        log("Loading Solana libraries. The first run can take a few seconds.");
+        await loadLibraries();
+        const program = address(programText);
+        const TOKEN_2022 = address(TOKEN_2022_ADDRESS);
+        const SYSTEM = address(SYSTEM_ADDRESS);
+        const RENT = address(RENT_ADDRESS);
 
         log("Generating throwaway wallets and encryption keys.");
         const x = await generateKeyPairSigner();

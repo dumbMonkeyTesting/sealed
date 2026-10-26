@@ -23,7 +23,7 @@ Playground can also import a GitHub folder. After this repo is on GitHub, the im
 
 `app/index.html` talks to devnet from the browser. Open it over https, not as a file on disk. The browser blocks the library imports from a `file://` page. Once the repo is on GitHub, this preview works:
 
-`https://htmlpreview.github.io/?https://github.com/OWNER/REPO/blob/BRANCH/app/index.html`
+`https://htmlpreview.github.io/?https://raw.githubusercontent.com/dumbMonkeyTesting/sealed/main/app/index.html`
 
 Paste the program id and run. The page creates new wallets, shields 0.03 SOL, and sends that 0.03 SOL to a second wallet. It does not read a keypair file and it does not spend the Playground wallet. Proof generation takes a while. A successful run ends with the second wallet holding exactly 0.03 SOL.
 
