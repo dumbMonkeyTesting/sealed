@@ -53,8 +53,9 @@
     <h1>Sealed devnet test</h1>
     <p>
       Paste the program id Playground printed after deploy. This page generates
-      throwaway wallets in the browser, shields 0.05 SOL, then sends 0.02 SOL
-      with the amount encrypted. Devnet SOL is free. Nothing here touches mainnet.
+      new wallets in the browser and does not read any keypair file. It shields
+      0.03 SOL, then sends that 0.03 SOL to a second wallet. Nothing here touches
+      the Playground wallet or mainnet.
     </p>
     <label for="program">Program id</label>
     <input id="program" spellcheck="false" placeholder="Program id from declare_id" />
@@ -96,8 +97,8 @@
     const SYSTEM = address("11111111111111111111111111111111");
     const RENT = address("SysvarRent111111111111111111111111111111111");
     const ATA = address("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
-    const SHIELD = 50_000_000n;
-    const SEND = 20_000_000n;
+    const SHIELD = 30_000_000n;
+    const SEND = 30_000_000n;
     const DISC = {
       initialize: Uint8Array.from([0xaf, 0xaf, 0x6d, 0x1f, 0x0d, 0x98, 0x9b, 0xed]),
       shield: Uint8Array.from([0xdc, 0xc6, 0xfd, 0xf6, 0xe7, 0x54, 0x93, 0x62]),
@@ -189,7 +190,7 @@
         if (current >= minimum) return current;
         await new Promise((resolve) => setTimeout(resolve, 1500));
       }
-      throw new Error("Devnet airdrop did not arrive. Fund " + who + " at https://faucet.solana.com and run again with a new program if initialize already landed.");
+      throw new Error("Devnet airdrop did not arrive for " + who + ". If you fund that address yourself, send 0.1 SOL only. Do not send the Playground wallet balance.");
     }
 
     runButton.addEventListener("click", async () => {
@@ -218,9 +219,10 @@
         client = await client.use(planAndSendTransactions());
 
         log("Wallet X " + x.address);
-        log("Requesting 2 devnet SOL for fees and the deposit.");
-        await client.rpc.requestAirdrop(x.address, lamports(2_000_000_000n)).send();
-        await waitForLamports(client.rpc, x.address, 1_000_000_000n);
+        log("This test does not use the Playground wallet.");
+        log("Requesting 0.1 devnet SOL for account rent and the 0.03 SOL deposit.");
+        await client.rpc.requestAirdrop(x.address, lamports(100_000_000n)).send();
+        await waitForLamports(client.rpc, x.address, 60_000_000n);
 
         const auditor = await confidentialKeys(auditorSigner);
         const xKeys = await confidentialKeys(x);
@@ -264,7 +266,7 @@
           aesKey: yKeys.aesKey,
         }));
 
-        await send(client, "Shielding 0.05 SOL. This amount is public.", [{
+        await send(client, "Shielding 0.03 SOL. This amount is public.", [{
           programAddress: program,
           accounts: [
             account(x.address, AccountRole.WRITABLE_SIGNER, x),
@@ -299,7 +301,7 @@
 
         const xReady = await fetchToken(client.rpc, xToken);
         const yReady = await fetchToken(client.rpc, yToken);
-        log("Sending 0.02 SOL to Y. Proof generation can take half a minute.");
+        log("Sending 0.03 SOL to Y. Proof generation can take half a minute.");
         await send(client, "Confidential transfer submitted.", await getConfidentialTransferInstructionPlan({
           rpc: client.rpc,
           payer: x,
@@ -327,7 +329,7 @@
         ]);
 
         const ySpendable = await fetchToken(client.rpc, yToken);
-        await send(client, "Withdrawing 0.02 cSOL back to Y's public balance. This amount is public.", await getConfidentialWithdrawInstructionPlan({
+        await send(client, "Withdrawing 0.03 cSOL back to Y's public balance. This amount is public.", await getConfidentialWithdrawInstructionPlan({
           rpc: client.rpc,
           payer: x,
           token: yToken,
@@ -340,7 +342,7 @@
           aesKey: yKeys.aesKey,
         }));
 
-        await send(client, "Unshielding 0.02 SOL to Y.", [{
+        await send(client, "Unshielding 0.03 SOL to Y.", [{
           programAddress: program,
           accounts: [
             account(y.address, AccountRole.WRITABLE_SIGNER, y),
@@ -357,9 +359,9 @@
         log("Y received " + yBalance.toString() + " lamports.");
         log("Vault now holds " + vaultBalance.toString() + " lamports, including its rent.");
         if (yBalance !== SEND) {
-          throw new Error("Expected Y to hold exactly 0.02 SOL.");
+          throw new Error("Expected Y to hold exactly 0.03 SOL.");
         }
-        log("Done. The middle transfer encrypted the 0.02. Shield and unshield stayed public.");
+        log("Done. Y received 0.03 SOL. Shield and unshield stayed public.");
         log("Vault " + vault);
         log("cSOL mint " + mintSigner.address);
       } catch (error) {

@@ -25,6 +25,6 @@ Playground can also import a GitHub folder. After this repo is on GitHub, the im
 
 `https://htmlpreview.github.io/?https://github.com/OWNER/REPO/blob/BRANCH/app/index.html`
 
-Paste the program id and run. The page creates throwaway wallets, shields 0.05 SOL, and sends 0.02 SOL to a second wallet. Proof generation takes a while. A successful run ends with the second wallet holding exactly 0.02 SOL.
+Paste the program id and run. The page creates new wallets, shields 0.03 SOL, and sends that 0.03 SOL to a second wallet. It does not read a keypair file and it does not spend the Playground wallet. Proof generation takes a while. A successful run ends with the second wallet holding exactly 0.03 SOL.
 
 Devnet can reset, and the public faucet rate-limits airdrops. A failed run after the vault exists needs a fresh deploy, because `initialize` can only run once per program id.
