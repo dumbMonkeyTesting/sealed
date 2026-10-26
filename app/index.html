@@ -50,12 +50,12 @@
       font-weight: 650;
       letter-spacing: -0.03em;
     }
-    .mark i {
-      width: 14px;
-      height: 14px;
-      border-radius: 4px;
-      background: linear-gradient(145deg, var(--gold), var(--plum));
-      display: inline-block;
+    .mark svg {
+      width: 26px;
+      height: 26px;
+      display: block;
+      flex: none;
+      border-radius: 7px;
       box-shadow: 0 0 0 4px var(--glow);
       animation: pulse 2.8s ease-out infinite;
     }
@@ -307,7 +307,7 @@
 <body>
   <div class="wrap">
     <header>
-      <a class="mark" href="#top"><i></i> sealed</a>
+      <a class="mark" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="sealGrad" x1="1" y1="0" x2="31" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0cb86"/><stop offset="0.46" stop-color="#e4b15a"/><stop offset="1" stop-color="#c98ad4"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#sealGrad)"/><g fill="none" stroke="#1c1611" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 16.5V5.1c0-.9.7-1.6 1.6-1.6h10.2c.9 0 1.6.7 1.6 1.6v11.4"/><path d="M4.8 13.9 16 20.2l10.4-6.3V25.1c0 .9-.7 1.6-1.6 1.6H6.4c-.9 0-1.6-.7-1.6-1.6z"/><path stroke-width="1.7" d="M18.7 7.55c0-1.4-1.2-2.15-2.7-2.15-1.85 0-2.85 1-2.85 2.45 0 1.85 5.7.85 5.7 3 0 1.45-1.3 2.5-2.95 2.5-1.75 0-2.75-1-2.8-2.3"/><path stroke-width="1.7" d="M16 4.7v9.35"/></g></svg> sealed</a>
       <nav>
         <a href="#how">how it works</a>
         <a href="#proof">proof</a>
@@ -390,7 +390,7 @@
     <section id="try">
       <h2>send any amount</h2>
       <p class="lede">
-        Pick the SOL to move from a fresh wallet X to a fresh wallet Y. The above figure was only the proof run.
+        Pick the SOL to move from a fresh wallet X to a fresh wallet Y. The above figure was only the proof txn.
         This page creates the wallets in the browser. X must be funded with the amount plus about 0.07 SOL for rent before the transfer starts.
       </p>
       <form class="try" id="try-form">
@@ -446,7 +446,7 @@
     }
 
     document.querySelector("#ledger-hint").textContent = "Illustrated. The real " + site.networkName + " transfer is in the proof below.";
-    document.querySelector("#proof-lede").textContent = "This run moved " + site.proof.amountSol + " SOL from wallet X to wallet Y on " + site.networkName + ". Open the private send: the accounts, the fee, and the time are there. The amount is not. Shield and unshield name " + site.proof.amountSol + " SOL because those two steps are the public border.";
+    document.querySelector("#proof-lede").textContent = "This txn moved " + site.proof.amountSol + " SOL from wallet X to wallet Y on " + site.networkName + ". Open the private send: the accounts, the fee, and the time are there. The amount is not. Shield and unshield name " + site.proof.amountSol + " SOL because those two steps are the public border.";
     const proofList = document.querySelector("#proof-list");
     const publicTag = site.proof.amountSol + " SOL public";
     if (site.proof.privateSend) {
