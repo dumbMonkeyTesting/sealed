@@ -230,7 +230,7 @@
     }
 
     async function waitForLamports(rpc, who, minimum) {
-      for (let attempt = 0; attempt < 40; attempt += 1) {
+      for (let attempt = 0; attempt < 90; attempt += 1) {
         const current = await balance(rpc, who);
         if (current >= minimum) return current;
         await new Promise((resolve) => setTimeout(resolve, 1500));
@@ -272,13 +272,8 @@
         client = await client.use(planAndSendTransactions());
 
         log("Wallet X " + x.address);
-        log("This test does not use the Playground wallet.");
-        log("Requesting 0.1 devnet SOL for account rent and the 0.03 SOL deposit.");
-        try {
-          await client.rpc.requestAirdrop(x.address, lamports(100_000_000n)).send();
-        } catch (error) {
-          throw new Error("Devnet will not airdrop to " + x.address + ". The public faucet is closed. This run stopped before any SOL moved.");
-        }
+        log("This test does not use the Playground wallet for the 0.03 SOL transfer.");
+        log("Waiting for 0.1 SOL to arrive at X. That pays account rent and the 0.03 SOL deposit.");
         await waitForLamports(client.rpc, x.address, 60_000_000n);
 
         const auditor = await confidentialKeys(auditorSigner);
@@ -331,6 +326,7 @@
             account(mintSigner.address, AccountRole.WRITABLE),
             account(xToken, AccountRole.WRITABLE),
             account(TOKEN_2022, AccountRole.READONLY),
+            account(SYSTEM, AccountRole.READONLY),
           ],
           data: concat([DISC.shield, u64(SHIELD)]),
         }]);
@@ -407,6 +403,7 @@
             account(mintSigner.address, AccountRole.WRITABLE),
             account(yToken, AccountRole.WRITABLE),
             account(TOKEN_2022, AccountRole.READONLY),
+            account(SYSTEM, AccountRole.READONLY),
           ],
           data: concat([DISC.unshield, u64(SEND)]),
         }]);

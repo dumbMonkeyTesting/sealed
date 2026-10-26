@@ -82,10 +82,17 @@ pub mod sealed {
         check_amount(amount)?;
         check_token_account(&ctx.accounts)?;
 
-        move_lamports(
-            &ctx.accounts.user.to_account_info(),
-            &ctx.accounts.vault.to_account_info(),
-            amount,
+        invoke(
+            &system_instruction::transfer(
+                ctx.accounts.user.key,
+                &ctx.accounts.vault.key(),
+                amount,
+            ),
+            &[
+                ctx.accounts.user.to_account_info(),
+                ctx.accounts.vault.to_account_info(),
+                ctx.accounts.system_program.to_account_info(),
+            ],
         )?;
 
         let bump = ctx.accounts.vault.bump;
@@ -211,6 +218,7 @@ pub struct MoveSol<'info> {
     /// CHECK: address is constrained to Token-2022.
     #[account(address = TOKEN_2022_PROGRAM_ID)]
     pub token_program: AccountInfo<'info>,
+    pub system_program: Program<'info, System>,
 }
 
 #[derive(Accounts)]
