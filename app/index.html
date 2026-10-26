@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Sealed — devnet test</title>
+  <style>
+    :root { color-scheme: dark; }
+    body {
+      margin: 0;
+      font: 15px/1.45 ui-sans-serif, system-ui, sans-serif;
+      background: #101114;
+      color: #e7e7ea;
+    }
+    main { max-width: 720px; margin: 0 auto; padding: 32px 20px 64px; }
+    h1 { font-size: 22px; margin: 0 0 8px; }
+    p { color: #b8b8c0; }
+    label { display: block; margin: 20px 0 6px; }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: 1px solid #333;
+      background: #181a1f;
+      color: inherit;
+      font: inherit;
+    }
+    button {
+      margin-top: 16px;
+      padding: 10px 16px;
+      border: 0;
+      border-radius: 8px;
+      background: #f4f4f5;
+      color: #111;
+      font: inherit;
+      cursor: pointer;
+    }
+    button:disabled { opacity: 0.5; cursor: default; }
+    pre {
+      margin-top: 20px;
+      padding: 14px;
+      background: #181a1f;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      word-break: break-word;
+      min-height: 8em;
+    }
+    a { color: #9ec1ff; }
+  </style>
+</head>
+<body>
+  <main>
+    <h1>Sealed devnet test</h1>
+    <p>
+      Paste the program id Playground printed after deploy. This page generates
+      throwaway wallets in the browser, shields 0.05 SOL, then sends 0.02 SOL
+      with the amount encrypted. Devnet SOL is free. Nothing here touches mainnet.
+    </p>
+    <label for="program">Program id</label>
+    <input id="program" spellcheck="false" placeholder="Program id from declare_id" />
+    <button id="run" type="button">Run on devnet</button>
+    <pre id="log">Waiting.</pre>
+  </main>
+  <script type="module">
+    import {
+      AccountRole,
+      address,
+      createClient,
+      generateKeyPairSigner,
+      getAddressEncoder,
+      getProgramDerivedAddress,
+      lamports,
+    } from "https://esm.sh/@solana/kit@6.10.0";
+    import { signer as signerPlugin } from "https://esm.sh/@solana/kit-plugin-signer@0.10.0";
+    import { solanaRpc } from "https://esm.sh/@solana/kit-plugin-rpc@0.11.1";
+    import { planAndSendTransactions } from "https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0";
+    import {
+      AeKey,
+      ElGamalKeypair,
+      ElGamalSecretKey,
+    } from "https://esm.sh/@solana/zk-sdk@0.4.2";
+    import {
+      fetchToken,
+      getConfidentialDepositInstruction,
+    } from "https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2";
+    import {
+      deriveAeKey,
+      deriveElGamalKeypair,
+      getApplyConfidentialPendingBalanceInstructionFromToken,
+      getConfidentialTransferInstructionPlan,
+      getConfidentialWithdrawInstructionPlan,
+      getCreateConfidentialTransferAccountInstructionPlan,
+    } from "https://esm.sh/@solana-program/token-2022@0.12.0/confidential?deps=@solana/kit@6.10.0,@solana/zk-sdk@0.4.2";
+
+    const TOKEN_2022 = address("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb");
+    const SYSTEM = address("11111111111111111111111111111111");
+    const RENT = address("SysvarRent111111111111111111111111111111111");
+    const ATA = address("ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL");
+    const SHIELD = 50_000_000n;
+    const SEND = 20_000_000n;
+    const DISC = {
+      initialize: Uint8Array.from([0xaf, 0xaf, 0x6d, 0x1f, 0x0d, 0x98, 0x9b, 0xed]),
+      shield: Uint8Array.from([0xdc, 0xc6, 0xfd, 0xf6, 0xe7, 0x54, 0x93, 0x62]),
+      unshield: Uint8Array.from([0x15, 0xe4, 0x37, 0x18, 0xc2, 0x0a, 0x15, 0x16]),
+    };
+
+    const logEl = document.querySelector("#log");
+    const programInput = document.querySelector("#program");
+    const runButton = document.querySelector("#run");
+    const saved = localStorage.getItem("sealed-program");
+    if (saved) programInput.value = saved;
+
+    const lines = [];
+    function log(line) {
+      lines.push(line);
+      logEl.textContent = lines.join("\n");
+    }
+
+    function concat(parts) {
+      const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+      let offset = 0;
+      for (const part of parts) {
+        out.set(part, offset);
+        offset += part.length;
+      }
+      return out;
+    }
+
+    function u64(value) {
+      const bytes = new Uint8Array(8);
+      new DataView(bytes.buffer).setBigUint64(0, BigInt(value), true);
+      return bytes;
+    }
+
+    function account(addr, role, who) {
+      return who ? { address: addr, role, signer: who } : { address: addr, role };
+    }
+
+    const encodeAddress = getAddressEncoder().encode.bind(getAddressEncoder());
+
+    async function associatedToken(owner, mint) {
+      const [token] = await getProgramDerivedAddress({
+        programAddress: ATA,
+        seeds: [encodeAddress(owner), encodeAddress(TOKEN_2022), encodeAddress(mint)],
+      });
+      return token;
+    }
+
+    async function confidentialKeys(who) {
+      const derived = await deriveElGamalKeypair({ signer: who });
+      const aesDerived = await deriveAeKey({ signer: who });
+      const elgamalSecretKey = ElGamalSecretKey.fromBytes(derived.secretKey);
+      const elgamalKeypair = ElGamalKeypair.fromSecretKey(elgamalSecretKey);
+      const aesKey = aesDerived instanceof Uint8Array ? AeKey.fromBytes(aesDerived) : aesDerived;
+      return { elgamalKeypair, elgamalSecretKey, aesKey, elgamalPubkey: derived.elgamalPubkey };
+    }
+
+    async function send(client, label, instructions) {
+      log(label);
+      const result = await client.sendTransactions(instructions);
+      const signature = findSignature(result);
+      if (signature) log("  " + explorer(signature));
+      return result;
+    }
+
+    function findSignature(value) {
+      if (!value || typeof value !== "object") return null;
+      if (typeof value.signature === "string") return value.signature;
+      if (value.context && typeof value.context.signature === "string") return value.context.signature;
+      for (const nested of Object.values(value)) {
+        const found = findSignature(nested);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    function explorer(signature) {
+      return "https://explorer.solana.com/tx/" + signature + "?cluster=devnet";
+    }
+
+    async function balance(rpc, who) {
+      const response = await rpc.getBalance(who).send();
+      return BigInt(response.value);
+    }
+
+    async function waitForLamports(rpc, who, minimum) {
+      for (let attempt = 0; attempt < 40; attempt += 1) {
+        const current = await balance(rpc, who);
+        if (current >= minimum) return current;
+        await new Promise((resolve) => setTimeout(resolve, 1500));
+      }
+      throw new Error("Devnet airdrop did not arrive. Fund " + who + " at https://faucet.solana.com and run again with a new program if initialize already landed.");
+    }
+
+    runButton.addEventListener("click", async () => {
+      lines.length = 0;
+      runButton.disabled = true;
+      try {
+        const program = address(programInput.value.trim());
+        localStorage.setItem("sealed-program", programInput.value.trim());
+
+        log("Generating throwaway wallets and encryption keys.");
+        const x = await generateKeyPairSigner();
+        const y = await generateKeyPairSigner();
+        const auditorSigner = await generateKeyPairSigner();
+        const mintSigner = await generateKeyPairSigner();
+        const [vault] = await getProgramDerivedAddress({
+          programAddress: program,
+          seeds: [new TextEncoder().encode("vault")],
+        });
+
+        let client = createClient();
+        client = await client.use(signerPlugin(x));
+        client = await client.use(solanaRpc({
+          rpcUrl: "https://api.devnet.solana.com",
+          rpcSubscriptionsUrl: "wss://api.devnet.solana.com",
+        }));
+        client = await client.use(planAndSendTransactions());
+
+        log("Wallet X " + x.address);
+        log("Requesting 2 devnet SOL for fees and the deposit.");
+        await client.rpc.requestAirdrop(x.address, lamports(2_000_000_000n)).send();
+        await waitForLamports(client.rpc, x.address, 1_000_000_000n);
+
+        const auditor = await confidentialKeys(auditorSigner);
+        const xKeys = await confidentialKeys(x);
+        const yKeys = await confidentialKeys(y);
+        const auditorBytes = encodeAddress(auditor.elgamalPubkey);
+        if (auditorBytes.length !== 32) throw new Error("auditor key was not 32 bytes");
+
+        const xToken = await associatedToken(x.address, mintSigner.address);
+        const yToken = await associatedToken(y.address, mintSigner.address);
+
+        await send(client, "Creating the vault and the cSOL mint.", [{
+          programAddress: program,
+          accounts: [
+            account(x.address, AccountRole.WRITABLE_SIGNER, x),
+            account(vault, AccountRole.WRITABLE),
+            account(mintSigner.address, AccountRole.WRITABLE_SIGNER, mintSigner),
+            account(TOKEN_2022, AccountRole.READONLY),
+            account(SYSTEM, AccountRole.READONLY),
+            account(RENT, AccountRole.READONLY),
+          ],
+          data: concat([DISC.initialize, auditorBytes]),
+        }]);
+
+        await send(client, "Opening X's confidential token account.", await getCreateConfidentialTransferAccountInstructionPlan({
+          rpc: client.rpc,
+          payer: x,
+          owner: x,
+          mint: mintSigner.address,
+          token: xToken,
+          elgamalKeypair: xKeys.elgamalKeypair,
+          aesKey: xKeys.aesKey,
+        }));
+
+        await send(client, "Opening Y's confidential token account.", await getCreateConfidentialTransferAccountInstructionPlan({
+          rpc: client.rpc,
+          payer: x,
+          owner: y,
+          mint: mintSigner.address,
+          token: yToken,
+          elgamalKeypair: yKeys.elgamalKeypair,
+          aesKey: yKeys.aesKey,
+        }));
+
+        await send(client, "Shielding 0.05 SOL. This amount is public.", [{
+          programAddress: program,
+          accounts: [
+            account(x.address, AccountRole.WRITABLE_SIGNER, x),
+            account(vault, AccountRole.WRITABLE),
+            account(mintSigner.address, AccountRole.WRITABLE),
+            account(xToken, AccountRole.WRITABLE),
+            account(TOKEN_2022, AccountRole.READONLY),
+          ],
+          data: concat([DISC.shield, u64(SHIELD)]),
+        }]);
+
+        await send(client, "Moving the public cSOL into the encrypted balance.", [
+          getConfidentialDepositInstruction({
+            token: xToken,
+            mint: mintSigner.address,
+            authority: x,
+            amount: SHIELD,
+            decimals: 9,
+          }),
+        ]);
+
+        const xAccount = await fetchToken(client.rpc, xToken);
+        await send(client, "Applying X's pending balance.", [
+          getApplyConfidentialPendingBalanceInstructionFromToken({
+            token: xToken,
+            tokenAccount: xAccount.data,
+            authority: x,
+            elgamalSecretKey: xKeys.elgamalSecretKey,
+            aesKey: xKeys.aesKey,
+          }),
+        ]);
+
+        const xReady = await fetchToken(client.rpc, xToken);
+        const yReady = await fetchToken(client.rpc, yToken);
+        log("Sending 0.02 SOL to Y. Proof generation can take half a minute.");
+        await send(client, "Confidential transfer submitted.", await getConfidentialTransferInstructionPlan({
+          rpc: client.rpc,
+          payer: x,
+          authority: x,
+          mint: mintSigner.address,
+          sourceToken: xToken,
+          sourceTokenAccount: xReady.data,
+          destinationToken: yToken,
+          destinationTokenAccount: yReady.data,
+          auditorElgamalPubkey: auditor.elgamalPubkey,
+          amount: SEND,
+          sourceElgamalKeypair: xKeys.elgamalKeypair,
+          aesKey: xKeys.aesKey,
+        }));
+
+        const yAfter = await fetchToken(client.rpc, yToken);
+        await send(client, "Applying Y's pending balance.", [
+          getApplyConfidentialPendingBalanceInstructionFromToken({
+            token: yToken,
+            tokenAccount: yAfter.data,
+            authority: y,
+            elgamalSecretKey: yKeys.elgamalSecretKey,
+            aesKey: yKeys.aesKey,
+          }),
+        ]);
+
+        const ySpendable = await fetchToken(client.rpc, yToken);
+        await send(client, "Withdrawing 0.02 cSOL back to Y's public balance. This amount is public.", await getConfidentialWithdrawInstructionPlan({
+          rpc: client.rpc,
+          payer: x,
+          token: yToken,
+          mint: mintSigner.address,
+          tokenAccount: ySpendable.data,
+          authority: y,
+          amount: SEND,
+          decimals: 9,
+          elgamalKeypair: yKeys.elgamalKeypair,
+          aesKey: yKeys.aesKey,
+        }));
+
+        await send(client, "Unshielding 0.02 SOL to Y.", [{
+          programAddress: program,
+          accounts: [
+            account(y.address, AccountRole.WRITABLE_SIGNER, y),
+            account(vault, AccountRole.WRITABLE),
+            account(mintSigner.address, AccountRole.WRITABLE),
+            account(yToken, AccountRole.WRITABLE),
+            account(TOKEN_2022, AccountRole.READONLY),
+          ],
+          data: concat([DISC.unshield, u64(SEND)]),
+        }]);
+
+        const yBalance = await balance(client.rpc, y.address);
+        const vaultBalance = await balance(client.rpc, vault);
+        log("Y received " + yBalance.toString() + " lamports.");
+        log("Vault now holds " + vaultBalance.toString() + " lamports, including its rent.");
+        if (yBalance !== SEND) {
+          throw new Error("Expected Y to hold exactly 0.02 SOL.");
+        }
+        log("Done. The middle transfer encrypted the 0.02. Shield and unshield stayed public.");
+        log("Vault " + vault);
+        log("cSOL mint " + mintSigner.address);
+      } catch (error) {
+        log(error && error.stack ? error.stack : String(error));
+      } finally {
+        runButton.disabled = false;
+      }
+    });
+  </script>
+</body>
+</html>

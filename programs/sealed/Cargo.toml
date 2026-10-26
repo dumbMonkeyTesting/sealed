@@ -1,0 +1,19 @@
+[package]
+name = "sealed"
+version = "0.1.0"
+edition = "2021"
+description = "SOL vault that mints a 1:1 confidential-balance claim on Token-2022"
+
+[lib]
+crate-type = ["cdylib", "lib"]
+name = "sealed"
+
+[features]
+no-entrypoint = []
+no-idl = []
+no-log-ix-name = []
+cpi = ["no-entrypoint"]
+default = []
+
+[dependencies]
+anchor-lang = "0.29.0"
