@@ -4,6 +4,7 @@ use anchor_lang::solana_program::{
     program::{invoke, invoke_signed},
     system_instruction,
 };
+use solana_program::pubkey;
 
 declare_id!("11111111111111111111111111111111");
 
