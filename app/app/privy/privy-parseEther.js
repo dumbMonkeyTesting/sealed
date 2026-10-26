@@ -1,0 +1,1 @@
+import{Xt as e}from"./privy-call.js";function t(t,n=`wei`){return e(t,n)}export{t};

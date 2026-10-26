@@ -1,0 +1,1 @@
+import{C as e,g as t}from"./privy-index-CaWn8tEz.js";var n=(n,r)=>t(n,r.ethereum.createOnLogin)||e(n,r.solana.createOnLogin);export{n as t};
