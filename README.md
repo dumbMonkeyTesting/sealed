@@ -21,7 +21,7 @@ Playground can also import a GitHub folder. After this repo is on GitHub, the im
 
 ## Test
 
-`app/index.html` talks to devnet from the browser. From the `app` folder, run `python -m http.server 8765` and open `http://127.0.0.1:8765/`. Opening the file directly, or through an HTML preview site, does not run it.
+`index.html` is the site and `app/index.html` is the app. From this folder, run `python -m http.server 8765`, then open `http://127.0.0.1:8765/` for the site and `http://127.0.0.1:8765/app` for the app. Opening either file directly, or through an HTML preview site, does not run it.
 
 Paste the program id and run. The page creates new wallets, shields 0.03 SOL, and sends that 0.03 SOL to a second wallet. It does not read a keypair file and it does not spend the Playground wallet. Proof generation takes a while. A successful run ends with the second wallet holding exactly 0.03 SOL.
 

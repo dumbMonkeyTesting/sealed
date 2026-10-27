@@ -3,13 +3,12 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>sealed · confidential SOL</title>
+  <title>sealed · app</title>
   <style>
     :root {
       color-scheme: dark;
       --void: #14110e;
       --panel: #221c17;
-      --panel-2: #2b241c;
       --line: #3d342b;
       --ink: #f6f0e6;
       --mute: #a89884;
@@ -17,15 +16,14 @@
       --gold: #e4b15a;
       --gold-2: #f0cb86;
       --plum: #c98ad4;
-      --plum-deep: #8d5a98;
       --glow: rgba(228, 177, 90, 0.18);
       --sans: "Avenir Next", "Segoe UI", sans-serif;
       --mono: "IBM Plex Mono", "SFMono-Regular", ui-monospace, Menlo, Consolas, monospace;
     }
     * { box-sizing: border-box; }
-    html { scroll-behavior: smooth; }
     body {
       margin: 0;
+      min-height: 100vh;
       background:
         radial-gradient(900px 480px at 80% -10%, rgba(201, 138, 212, 0.16), transparent 60%),
         radial-gradient(700px 420px at -10% 20%, rgba(228, 177, 90, 0.1), transparent 55%),
@@ -35,489 +33,79 @@
     }
     a { color: var(--gold-2); text-decoration: none; }
     a:hover { color: var(--ink); }
-    .wrap { width: min(1080px, calc(100% - 40px)); margin: 0 auto; }
-    header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 22px 0 8px;
-    }
-    .mark {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      color: var(--ink);
-      font-weight: 650;
-      letter-spacing: -0.03em;
-    }
+    .wrap { width: min(720px, calc(100% - 40px)); margin: 0 auto; }
+    header { display: flex; align-items: center; justify-content: space-between; padding: 22px 0 8px; }
+    .mark { display: flex; align-items: center; gap: 10px; color: var(--ink); font-weight: 650; letter-spacing: -0.03em; }
     .mark svg {
-      width: 26px;
-      height: 26px;
-      display: block;
-      flex: none;
-      border-radius: 7px;
+      width: 26px; height: 26px; display: block; flex: none; border-radius: 7px;
       box-shadow: 0 0 0 4px var(--glow);
-      animation: pulse 2.8s ease-out infinite;
     }
     nav { display: flex; align-items: center; gap: 22px; }
-    nav a { color: var(--mute); font-size: 14px; }
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      border: 0;
-      border-radius: 999px;
-      background: var(--gold);
-      color: #24180b;
-      font: inherit;
-      font-weight: 650;
-      padding: 10px 16px;
-      cursor: pointer;
-    }
-    .pill:hover { background: var(--gold-2); color: #24180b; }
-    .pill:disabled { opacity: 0.55; cursor: default; }
-    .hero {
-      position: relative;
-      display: grid;
-      grid-template-columns: 1.05fr 0.95fr;
-      gap: 48px;
-      align-items: center;
-      padding: 54px 0 28px;
-      overflow: hidden;
-    }
-    .glyphs { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-    .glyphs span {
-      position: absolute;
-      font-family: var(--mono);
-      font-size: 13px;
-      color: rgba(228, 177, 90, 0.28);
-      animation: drift 14s linear infinite;
-    }
-    .glyphs span:nth-child(3n) { color: rgba(201, 138, 212, 0.32); }
-    h1 {
-      position: relative;
-      z-index: 1;
-      margin: 0;
-      font-size: clamp(40px, 5vw, 64px);
-      line-height: 0.96;
-      letter-spacing: -0.045em;
-      font-weight: 650;
-    }
+    nav a:not(.pill) { color: var(--mute); font-size: 14px; }
+    h1 { margin: 28px 0 0; font-size: clamp(40px, 6vw, 64px); line-height: 0.96; letter-spacing: -0.045em; font-weight: 650; }
     h1 em { font-style: normal; color: var(--plum); }
-    .sub {
-      position: relative;
-      z-index: 1;
-      color: var(--mute);
-      max-width: 46ch;
-      margin: 18px 0 26px;
-    }
+    .sub { color: var(--mute); max-width: 52ch; margin: 16px 0 22px; }
+    .sub strong { color: var(--ink); font-weight: 700; }
     .panel {
-      position: relative;
-      z-index: 1;
-      background: linear-gradient(180deg, rgba(43, 36, 28, 0.92), rgba(28, 23, 19, 0.94));
-      border: 1px solid var(--line);
+      padding: 22px;
       border-radius: 18px;
-      box-shadow: 0 30px 80px rgba(0, 0, 0, 0.28);
-    }
-    .panel head, .panel-h {
-      display: flex;
-      justify-content: space-between;
-      gap: 12px;
-      padding: 14px 16px 8px;
-      color: var(--dim);
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.14em;
-    }
-    .row {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr auto;
-      gap: 8px;
-      align-items: center;
-      margin: 0 12px;
-      padding: 9px 4px;
-      border-top: 1px solid rgba(61, 52, 43, 0.85);
-      font-family: var(--mono);
-      font-size: 13px;
-      color: var(--mute);
-    }
-    .row b { color: var(--gold-2); font-weight: 500; text-align: right; }
-    .row i { color: var(--dim); font-style: normal; }
-    .hint { padding: 8px 16px 14px; color: var(--dim); font-size: 12px; }
-    section { padding: 28px 0 10px; }
-    h2 { margin: 0 0 8px; font-size: 28px; letter-spacing: -0.04em; }
-    .lede { color: var(--mute); max-width: 62ch; margin: 0 0 18px; }
-    .proof {
-      display: grid;
-      gap: 10px;
-    }
-    .tx {
-      display: flex;
-      justify-content: space-between;
-      gap: 16px;
-      align-items: center;
-      padding: 14px 16px;
       border: 1px solid var(--line);
-      border-radius: 14px;
-      background: rgba(34, 28, 23, 0.72);
+      background: linear-gradient(180deg, rgba(43, 36, 28, 0.92), rgba(28, 23, 19, 0.94));
     }
-    .tx strong { display: block; font-size: 14px; }
-    .tx span, .tx code { color: var(--mute); font-family: var(--mono); font-size: 12px; }
-    .tag {
-      border-radius: 999px;
-      padding: 4px 8px;
-      font-family: var(--mono);
-      font-size: 11px;
-      letter-spacing: 0.08em;
-      color: #24180b;
-      background: var(--gold);
-    }
-    .tag.hidden { color: #2a142e; background: var(--plum); }
-    .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; }
-    .step {
-      min-height: 250px;
-      padding: 16px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(34, 28, 23, 0.66);
-      overflow: hidden;
-    }
-    .step small { color: var(--gold); font-family: var(--mono); letter-spacing: 0.12em; }
-    .step h3 { margin: 8px 0; letter-spacing: -0.03em; }
-    .step p { color: var(--mute); font-size: 14px; }
-    .stage { height: 54px; position: relative; margin-bottom: 8px; }
-    .coin, .vaultbox, .proofpill {
-      position: absolute;
-      top: 12px;
-    }
-    .coin {
-      left: 0;
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      background: radial-gradient(circle at 35% 35%, var(--gold-2), var(--gold) 45%, #8a6230);
-      animation: coin-in 3.6s ease-in-out infinite;
-    }
-    .vaultbox {
-      left: 78px;
-      width: 46px;
-      height: 32px;
-      border-radius: 8px;
-      border: 1px solid var(--plum);
-      background: rgba(201, 138, 212, 0.12);
-    }
-    .proofpill {
-      left: 8px;
-      height: 26px;
-      padding: 4px 8px;
-      border-radius: 999px;
-      background: var(--plum);
-      color: #2a142e;
-      font-family: var(--mono);
-      font-size: 11px;
-      animation: hop 3.6s ease-in-out infinite;
-    }
-    .coin.back { animation-name: coin-back; }
-    .facts { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-    .fact {
-      padding: 14px;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: rgba(34, 28, 23, 0.66);
-    }
-    .fact span { display: block; color: var(--dim); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; }
-    .fact strong { display: block; margin-top: 8px; font-size: 15px; word-break: break-all; }
-    .split { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-    .card {
-      padding: 18px;
-      border-radius: 16px;
-      border: 1px solid var(--line);
-      background: rgba(34, 28, 23, 0.66);
-    }
-    .card h3 { margin: 0 0 8px; }
-    .card p { color: var(--mute); margin: 0; }
-    form.try {
-      display: grid;
-      grid-template-columns: 180px 1fr auto;
-      gap: 10px;
-      align-items: end;
-    }
-    label { display: block; color: var(--dim); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; margin-bottom: 6px; }
+    .who { margin: 0 0 16px; color: var(--mute); font-family: var(--mono); font-size: 13px; word-break: break-all; }
+    label { display: block; color: var(--dim); font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em; margin: 12px 0 6px; }
     input {
       width: 100%;
-      padding: 12px 12px;
+      padding: 12px;
       border-radius: 12px;
       border: 1px solid var(--line);
       background: #18140f;
       color: var(--ink);
       font: 16px/1.3 var(--mono);
     }
-    details { margin-top: 14px; color: var(--mute); }
+    .actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+    .pill {
+      display: inline-flex; align-items: center; border: 0; border-radius: 999px;
+      background: var(--gold); color: #24180b; font: inherit; font-weight: 650;
+      padding: 10px 16px; cursor: pointer;
+    }
+    .pill:hover { background: var(--gold-2); color: #24180b; }
+    .pill:disabled { opacity: 0.55; cursor: default; }
+    .pill.ghost { background: transparent; color: var(--gold-2); border: 1px solid var(--gold); }
+    .pill.ghost:hover { background: rgba(228, 177, 90, 0.12); color: var(--ink); }
     pre {
-      margin: 14px 0 0;
-      padding: 14px;
-      min-height: 9em;
-      border-radius: 14px;
-      background: #18140f;
-      border: 1px solid var(--line);
-      color: var(--gold-2);
-      font: 12.5px/1.45 var(--mono);
-      white-space: pre-wrap;
-      word-break: break-word;
-    }
-    footer { padding: 28px 0 48px; color: var(--dim); font-size: 13px; }
-    @keyframes drift {
-      from { transform: translateY(20px); opacity: 0; }
-      15% { opacity: 1; }
-      to { transform: translateY(-180px); opacity: 0; }
-    }
-    @keyframes pulse {
-      0% { box-shadow: 0 0 0 0 var(--glow); }
-      70% { box-shadow: 0 0 0 8px transparent; }
-      100% { box-shadow: 0 0 0 0 transparent; }
-    }
-    @keyframes coin-in {
-      0% { transform: translateX(0); opacity: 0; }
-      12% { opacity: 1; }
-      46% { transform: translateX(74px); opacity: 1; }
-      58% { transform: translateX(84px); opacity: 0; }
-      100% { opacity: 0; }
-    }
-    @keyframes hop {
-      0% { transform: translateX(0); opacity: 0; }
-      16% { opacity: 1; }
-      80% { transform: translateX(120px); opacity: 1; }
-      100% { transform: translateX(140px); opacity: 0; }
-    }
-    @keyframes coin-back {
-      0%, 40% { transform: translateX(90px); opacity: 0; }
-      55% { opacity: 1; }
-      88% { transform: translateX(0); opacity: 1; }
-      100% { opacity: 0; }
-    }
-    @media (max-width: 700px) {
-      .hero, .steps, .facts, .split, form.try { grid-template-columns: 1fr; }
-      .hero { padding-top: 28px; }
-      nav a:not(.pill) { display: none; }
-    }
-    @media (prefers-reduced-motion: reduce) {
-      *, *::before, *::after { animation: none !important; }
+      margin: 14px 0 0; padding: 14px; min-height: 9em; white-space: pre-wrap; word-break: break-word;
+      border-radius: 14px; background: #100e0c; color: var(--gold-2); font: 12px/1.55 var(--mono);
     }
   </style>
 </head>
 <body>
   <div class="wrap">
     <header>
-      <a class="mark" href="#top"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="sealGrad" x1="1" y1="0" x2="31" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0cb86"/><stop offset="0.46" stop-color="#e4b15a"/><stop offset="1" stop-color="#c98ad4"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#sealGrad)"/><g fill="none" stroke="#1c1611" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 16.5V5.1c0-.9.7-1.6 1.6-1.6h10.2c.9 0 1.6.7 1.6 1.6v11.4"/><path d="M4.8 13.9 16 20.2l10.4-6.3V25.1c0 .9-.7 1.6-1.6 1.6H6.4c-.9 0-1.6-.7-1.6-1.6z"/><path stroke-width="1.7" d="M18.7 7.55c0-1.4-1.2-2.15-2.7-2.15-1.85 0-2.85 1-2.85 2.45 0 1.85 5.7.85 5.7 3 0 1.45-1.3 2.5-2.95 2.5-1.75 0-2.75-1-2.8-2.3"/><path stroke-width="1.7" d="M16 4.7v9.35"/></g></svg> sealed</a>
+      <a class="mark" href="/"><svg viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="sealGrad" x1="1" y1="0" x2="31" y2="32" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#f0cb86"/><stop offset="0.46" stop-color="#e4b15a"/><stop offset="1" stop-color="#c98ad4"/></linearGradient></defs><rect width="32" height="32" rx="8" fill="url(#sealGrad)"/><g fill="none" stroke="#1c1611" stroke-width="1.45" stroke-linecap="round" stroke-linejoin="round"><path d="M9.3 16.5V5.1c0-.9.7-1.6 1.6-1.6h10.2c.9 0 1.6.7 1.6 1.6v11.4"/><path d="M4.8 13.9 16 20.2l10.4-6.3V25.1c0 .9-.7 1.6-1.6 1.6H6.4c-.9 0-1.6-.7-1.6-1.6z"/><path stroke-width="1.7" d="M18.7 7.55c0-1.4-1.2-2.15-2.7-2.15-1.85 0-2.85 1-2.85 2.45 0 1.85 5.7.85 5.7 3 0 1.45-1.3 2.5-2.95 2.5-1.75 0-2.75-1-2.8-2.3"/><path stroke-width="1.7" d="M16 4.7v9.35"/></g></svg> sealed</a>
       <nav>
-        <a href="#how">how it works</a>
-        <a href="#proof">proof</a>
-        <a class="pill" href="/app">launch app</a>
+        <a href="/">home</a>
+        <button id="connect" class="pill" type="button">Connect wallet</button>
       </nav>
     </header>
-
-    <section class="hero" id="top">
-      <div class="glyphs" id="glyphs"></div>
-      <div>
-        <h1>a transfer lands.<br><em>the amount does not.</em></h1>
-        <p class="sub">
-          Sealed locks SOL in a vault and hands you cSOL (the SPL token), a confidential receipt on Solana.
-          The private send is proven in your browser.
-        </p>
-        <a class="pill" href="/app">launch app</a>
+    <h1>send it sealed.<br><em>claim it plain.</em></h1>
+    <p class="sub" id="intro">Connect your receiver wallet first. It must have a balance, in order to open the SPL Token account. Afterwards, use your sender wallet to send any SOL amount to the receiver and finally connect the receiver again to convert cSOL to SOL by pressing <strong>CLAIM</strong>.</p>
+    <section class="panel">
+      <p class="who" id="who">No wallet connected.</p>
+      <label for="amount">SOL TO SEND</label>
+      <input id="amount" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.005" />
+      <label for="recipient">TO THIS WALLET</label>
+      <input id="recipient" autocomplete="off" spellcheck="false" placeholder="The address that will claim" />
+      <div class="actions">
+        <button id="send" class="pill" type="button">Send privately</button>
+        <button id="open" class="pill ghost" type="button">Open to receive</button>
+        <button id="claim" class="pill ghost" type="button">Claim</button>
       </div>
-      <div class="panel" aria-hidden="true">
-        <div class="panel-h"><span>RECENT TRANSFERS</span><span>AMOUNTS ENCRYPTED</span></div>
-        <div id="ledger"></div>
-        <div class="hint" id="ledger-hint">Illustrated. The real transfer is in the proof below.</div>
-      </div>
+      <pre id="log">Connect a wallet to start.</pre>
     </section>
-
-    <section id="proof">
-      <h2>find the amount</h2>
-      <p class="lede" id="proof-lede"></p>
-      <div class="proof" id="proof-list"></div>
-    </section>
-
-    <section id="how">
-      <h2>how it works</h2>
-      <p class="lede">Three moves. Real SOL only crosses the border at the first and the last txn. Everything between them is encrypted.</p>
-      <div class="steps">
-        <article class="step">
-          <div class="stage"><span class="coin"></span><span class="vaultbox"></span></div>
-          <small>01</small>
-          <h3>shield</h3>
-          <p>Deposit SOL. The vault mints the same number of cSOL. No proof yet: the program credits only what you sent.</p>
-        </article>
-        <article class="step">
-          <div class="stage"><span class="proofpill">proof</span></div>
-          <small>02</small>
-          <h3>send private</h3>
-          <p>Your browser proves the amount fits and the math balances. The chain checks the proof, not the number.</p>
-        </article>
-        <article class="step">
-          <div class="stage"><span class="coin back"></span><span class="vaultbox"></span></div>
-          <small>03</small>
-          <h3>unshield</h3>
-          <p>Withdraw cSOL back to plain SOL. That amount is public again. The encryption keys come from a signature, so there is nothing extra to store.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="live">
-      <h2 id="live-title">on this network, right now</h2>
-      <p class="lede" id="live-lede">These are the accounts from the working program. The vault balance is read when this page loads.</p>
-      <div class="facts">
-        <div class="fact"><span>VAULT SOL</span><strong id="vault-balance">…</strong></div>
-        <div class="fact"><span>NETWORK</span><strong id="network-name">…</strong></div>
-        <div class="fact"><span>VAULT</span><strong id="vault-address">…</strong></div>
-        <div class="fact"><span>cSOL MINT</span><strong id="mint-address">…</strong></div>
-      </div>
-    </section>
-
-    <section>
-      <div class="split">
-        <article class="card">
-          <h3>an auditor can read, not spend</h3>
-          <p>Each private transfer carries an encrypted copy for one auditor key. That key can see the amount. It cannot move the SOL.</p>
-        </article>
-        <article class="card">
-          <h3>honest about the boundary</h3>
-          <p>Public: that a transfer happened, and every shield and unshield, too. Hidden: the amount and the balance in between.</p>
-        </article>
-      </div>
-    </section>
-
-    <section id="try">
-      <h2>send any amount</h2>
-      <p class="lede">
-        Pick the SOL to move from a fresh wallet X to a fresh wallet Y. The above figure was only the proof txn.
-        This page creates the wallets in the browser. X must be funded with the amount plus about 0.07 SOL for rent before the transfer starts.
-      </p>
-      <form class="try" id="try-form">
-        <div>
-          <label for="amount">SOL TO SEND</label>
-          <input id="amount" inputmode="decimal" autocomplete="off" spellcheck="false" placeholder="0.25" />
-        </div>
-        <div>
-          <label for="program">PROGRAM</label>
-          <input id="program" spellcheck="false" value="" />
-        </div>
-        <button id="run" class="pill" type="submit">Run</button>
-      </form>
-      <p class="lede" id="need">Enter an amount. X will need that much, plus rent.</p>
-      <pre id="log">Ready. Choose an amount and press Run.</pre>
-    </section>
-
-    <footer>
-      <span id="footer-note">cSOL is a receipt for vaulted SOL, not a separate coin.</span>
-    </footer>
   </div>
-  <script src="deployment.js"></script>
-  <script>
-    const site = window.SEALED;
-    if (!site) throw new Error("deployment.js did not load");
-
-    function shortId(value) {
-      if (!value || value.length < 16) return value || "";
-      return value.slice(0, 12) + "…" + value.slice(-8);
-    }
-
-    function txUrl(signature) {
-      if (!signature) return "";
-      const mainnet = site.cluster === "mainnet-beta" || site.cluster === "mainnet";
-      return "https://explorer.solana.com/tx/" + signature + (mainnet ? "" : "?cluster=" + encodeURIComponent(site.cluster));
-    }
-
-    function proofCard(href, title, detail, tag, hidden) {
-      const link = document.createElement("a");
-      link.className = "tx";
-      link.href = href;
-      const copy = document.createElement("div");
-      const heading = document.createElement("strong");
-      heading.textContent = title;
-      const sub = document.createElement("span");
-      sub.textContent = detail;
-      copy.append(heading, sub);
-      const badge = document.createElement("em");
-      badge.className = hidden ? "tag hidden" : "tag";
-      badge.textContent = tag;
-      link.append(copy, badge);
-      return link;
-    }
-
-    document.querySelector("#ledger-hint").textContent = "Illustrated. The real " + site.networkName + " transfer is in the proof below.";
-    document.querySelector("#proof-lede").textContent = "This txn moved " + site.proof.amountSol + " SOL from wallet X to wallet Y on " + site.networkName + ". Open the private send: the accounts, the fee, and the time are there. The amount is not. Shield and unshield name " + site.proof.amountSol + " SOL because those two steps are the public border.";
-    const proofList = document.querySelector("#proof-list");
-    const publicTag = site.proof.amountSol + " SOL public";
-    if (site.proof.privateSend) {
-      proofList.append(proofCard(txUrl(site.proof.privateSend), "private send, X to Y", shortId(site.proof.privateSend), "amount hidden", true));
-    }
-    if (site.proof.shield) {
-      proofList.append(proofCard(txUrl(site.proof.shield), "shield into the vault", site.proof.senderShort + " → vault", publicTag, false));
-    }
-    if (site.proof.unshield) {
-      proofList.append(proofCard(txUrl(site.proof.unshield), "unshield back to Y", shortId(site.proof.unshield), publicTag, false));
-    }
-    document.querySelector("#live-title").textContent = "on " + site.networkName + ", right now";
-    document.querySelector("#live-lede").textContent = "These are the accounts from the working program. The vault balance is read from " + site.networkName + " when this page loads.";
-    document.querySelector("#network-name").textContent = site.networkLabel;
-    document.querySelector("#vault-address").textContent = site.vault;
-    document.querySelector("#mint-address").textContent = site.mint;
-    document.querySelector("#program").value = site.programId;
-    document.querySelector("#run").textContent = "Run on " + site.networkName;
-    document.querySelector("#footer-note").textContent = "Program " + site.programId + " · " + site.networkLabel + " · cSOL is a receipt for vaulted SOL, not a separate coin.";
-
-    const glyphs = document.querySelector("#glyphs");
-    const alphabet = "0123456789abcdef";
-    for (let i = 0; i < 28; i += 1) {
-      const node = document.createElement("span");
-      node.textContent = alphabet[i % alphabet.length];
-      node.style.left = (8 + (i * 37) % 90) + "%";
-      node.style.top = (10 + (i * 23) % 80) + "%";
-      node.style.animationDelay = (-1 * (i % 9)) + "s";
-      node.style.animationDuration = (11 + (i % 6)) + "s";
-      glyphs.appendChild(node);
-    }
-
-    const ledger = document.querySelector("#ledger");
-    const samples = site.ledger;
-    function cipherAmount() {
-      let text = "";
-      for (let i = 0; i < 10; i += 1) text += alphabet[Math.floor(Math.random() * alphabet.length)];
-      return text.slice(0, 4) + "." + text.slice(4, 6) + " " + text.slice(6);
-    }
-    for (const pair of samples) {
-      const row = document.createElement("div");
-      row.className = "row";
-      row.innerHTML = "<span></span><i>→</i><span></span><b></b>";
-      row.children[0].textContent = pair[0];
-      row.children[2].textContent = pair[1];
-      row.children[3].textContent = cipherAmount();
-      ledger.appendChild(row);
-    }
-    setInterval(() => {
-      for (const amount of ledger.querySelectorAll("b")) amount.textContent = cipherAmount();
-    }, 1600);
-
-    const vaultBalance = document.querySelector("#vault-balance");
-    fetch(site.rpc, {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({
-        jsonrpc: "2.0",
-        id: 1,
-        method: "getBalance",
-        params: [site.vault],
-      }),
-    }).then((response) => response.json()).then((body) => {
-      const lamports = BigInt(body.result.value);
-      const whole = lamports / 1000000000n;
-      const frac = (lamports % 1000000000n).toString().padStart(9, "0").replace(/0+$/, "");
-      vaultBalance.textContent = (frac ? whole.toString() + "." + frac : whole.toString()) + " SOL";
-    }).catch(() => {
-      vaultBalance.textContent = "unavailable";
-    });
-  </script>
+  <div id="privy-root"></div>
+  <script src="/deployment.js"></script>
   <script type="importmap">
     {
       "imports": {
@@ -530,110 +118,41 @@
     }
   </script>
   <script>
-    if (window.__sealedBound) {
-      throw new Error("sealed test already started");
-    }
-    window.__sealedBound = true;
     const sealed = window.SEALED;
+    if (!sealed) throw new Error("deployment.js did not load");
+    const chain = sealed.cluster === "mainnet" || sealed.cluster === "mainnet-beta" ? "solana:mainnet" : "solana:" + sealed.cluster;
 
-    let AccountRole;
-    let address;
-    let createClient;
-    let createTransactionMessage;
-    let createTransactionPlanner;
-    let generateKeyPairSigner;
-    let createKeyPairSignerFromPrivateKeyBytes;
-    let getAddressDecoder;
-    let getAddressEncoder;
-    let getProgramDerivedAddress;
-    let lamports;
-    let pipe;
-    let setTransactionMessageComputeUnitLimit;
-    let setTransactionMessageFeePayerSigner;
-    let setTransactionMessageLoadedAccountsDataSizeLimit;
-    let signerPlugin;
-    let solanaRpcConnection;
-    let rpcTransactionPlanExecutor;
-    let planAndSendTransactions;
-    let transactionPlanner;
-    let AeKey;
-    let ElGamalKeypair;
-    let ElGamalSecretKey;
-    let fetchMint;
-    let fetchToken;
-    let getConfidentialDepositInstruction;
-    let deriveAeKey;
-    let deriveElGamalKeypair;
-    let getApplyConfidentialPendingBalanceInstructionFromToken;
-    let getConfidentialTransferInstructionPlan;
-    let getConfidentialWithdrawInstructionPlan;
-    let getCreateConfidentialTransferAccountInstructionPlan;
+    let AccountRole, address, createClient, createKeyPairSignerFromPrivateKeyBytes, createTransactionMessage, createTransactionPlanner, getAddressEncoder, getProgramDerivedAddress, getTransactionDecoder, getTransactionEncoder, pipe, setTransactionMessageComputeUnitLimit, setTransactionMessageFeePayerSigner, setTransactionMessageLoadedAccountsDataSizeLimit, signerPlugin, solanaRpcConnection, rpcTransactionPlanExecutor, planAndSendTransactions, transactionPlanner;
+    let AeKey, AeCiphertext, ElGamalCiphertext, ElGamalKeypair, ElGamalSecretKey, fetchMint, fetchToken;
+    let deriveAeKey, deriveElGamalKeypair, getApplyConfidentialPendingBalanceInstructionFromToken, getConfidentialDepositInstruction, getConfidentialTransferInstructionPlan, getConfidentialWithdrawInstructionPlan, getCreateConfidentialTransferAccountInstructionPlan;
     let encodeAddress;
-
-    async function loadLibraries() {
-      const kit = await import("https://esm.sh/@solana/kit@6.10.0");
-      const signerMod = await import("https://esm.sh/@solana/kit-plugin-signer@0.10.0");
-      const rpcMod = await import("https://esm.sh/@solana/kit-plugin-rpc@0.11.1");
-      const planMod = await import("https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0");
-      const zk = await import("https://cdn.jsdelivr.net/npm/@solana/zk-sdk@0.4.2/dist/web/index.js");
-      if (typeof zk.default === "function") await zk.default();
-      const token = await import("https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0");
-      const confidential = await import("https://cdn.jsdelivr.net/npm/@solana-program/token-2022@0.12.0/dist/src/confidential.mjs");
-      AccountRole = kit.AccountRole;
-      address = kit.address;
-      createClient = kit.createClient;
-      createTransactionMessage = kit.createTransactionMessage;
-      createTransactionPlanner = kit.createTransactionPlanner;
-      generateKeyPairSigner = kit.generateKeyPairSigner;
-      createKeyPairSignerFromPrivateKeyBytes = kit.createKeyPairSignerFromPrivateKeyBytes;
-      getAddressDecoder = kit.getAddressDecoder;
-      getAddressEncoder = kit.getAddressEncoder;
-      getProgramDerivedAddress = kit.getProgramDerivedAddress;
-      lamports = kit.lamports;
-      pipe = kit.pipe;
-      setTransactionMessageComputeUnitLimit = kit.setTransactionMessageComputeUnitLimit;
-      setTransactionMessageFeePayerSigner = kit.setTransactionMessageFeePayerSigner;
-      setTransactionMessageLoadedAccountsDataSizeLimit = kit.setTransactionMessageLoadedAccountsDataSizeLimit;
-      signerPlugin = signerMod.signer;
-      solanaRpcConnection = rpcMod.solanaRpcConnection;
-      rpcTransactionPlanExecutor = rpcMod.rpcTransactionPlanExecutor;
-      planAndSendTransactions = planMod.planAndSendTransactions;
-      transactionPlanner = planMod.transactionPlanner;
-      AeKey = zk.AeKey;
-      ElGamalKeypair = zk.ElGamalKeypair;
-      ElGamalSecretKey = zk.ElGamalSecretKey;
-      fetchMint = token.fetchMint;
-      fetchToken = token.fetchToken;
-      getConfidentialDepositInstruction = token.getConfidentialDepositInstruction;
-      deriveAeKey = confidential.deriveAeKey;
-      deriveElGamalKeypair = confidential.deriveElGamalKeypair;
-      getApplyConfidentialPendingBalanceInstructionFromToken = confidential.getApplyConfidentialPendingBalanceInstructionFromToken;
-      getConfidentialTransferInstructionPlan = confidential.getConfidentialTransferInstructionPlan;
-      getConfidentialWithdrawInstructionPlan = confidential.getConfidentialWithdrawInstructionPlan;
-      getCreateConfidentialTransferAccountInstructionPlan = confidential.getCreateConfidentialTransferAccountInstructionPlan;
-      encodeAddress = getAddressEncoder().encode.bind(getAddressEncoder());
-    }
+    let libraries;
 
     const TOKEN_2022_ADDRESS = "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
     const SYSTEM_ADDRESS = "11111111111111111111111111111111";
-    const RENT_ADDRESS = "SysvarRent111111111111111111111111111111111";
     const ATA_ADDRESS = "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
-    const RENT_BUFFER = 70_000_000n;
     const DISC = {
-      initialize: Uint8Array.from([0xaf, 0xaf, 0x6d, 0x1f, 0x0d, 0x98, 0x9b, 0xed]),
       shield: Uint8Array.from([0xdc, 0xc6, 0xfd, 0xf6, 0xe7, 0x54, 0x93, 0x62]),
       unshield: Uint8Array.from([0x15, 0xe4, 0x37, 0x18, 0xc2, 0x0a, 0x15, 0x16]),
     };
 
     const logEl = document.querySelector("#log");
-    const programInput = document.querySelector("#program");
-    const amountInput = document.querySelector("#amount");
-    const needEl = document.querySelector("#need");
-    const runButton = document.querySelector("#run");
-    const tryForm = document.querySelector("#try-form");
-    if (!programInput.value) programInput.value = sealed.programId;
-    if (location.protocol === "file:") {
-      logEl.textContent = "This file was opened from disk, so the Solana libraries cannot load. Use the local page at http://127.0.0.1:8765/.";
+    const whoEl = document.querySelector("#who");
+    const connectButton = document.querySelector("#connect");
+    const sendButton = document.querySelector("#send");
+    const openButton = document.querySelector("#open");
+    const claimButton = document.querySelector("#claim");
+    const lines = [];
+    let session = null;
+
+    function log(line) {
+      lines.push(line);
+      logEl.textContent = lines.join("\n");
+    }
+
+    function resetLog() {
+      lines.length = 0;
+      logEl.textContent = "";
     }
 
     function formatSol(lamports) {
@@ -644,9 +163,7 @@
 
     function parseAmount(text) {
       const trimmed = text.trim();
-      if (!/^\d+(\.\d{1,9})?$/.test(trimmed)) {
-        throw new Error("Enter a SOL amount with up to 9 decimal places.");
-      }
+      if (!/^\d+(\.\d{1,9})?$/.test(trimmed)) throw new Error("Enter a SOL amount with up to 9 decimal places.");
       const [whole, frac = ""] = trimmed.split(".");
       const lamports = BigInt(whole) * 1_000_000_000n + BigInt(frac.padEnd(9, "0"));
       if (lamports <= 0n) throw new Error("Amount must be greater than zero.");
@@ -654,26 +171,8 @@
       return lamports;
     }
 
-    function showNeed() {
-      try {
-        const lamports = parseAmount(amountInput.value);
-        needEl.textContent = "X needs " + formatSol(lamports + RENT_BUFFER) + " SOL before the transfer can start.";
-      } catch (error) {
-        needEl.textContent = amountInput.value.trim()
-          ? error.message
-          : "Enter an amount. X will need that much, plus rent.";
-      }
-    }
-    amountInput.addEventListener("input", showNeed);
-
-    const lines = [];
-    function log(line) {
-      lines.push(line);
-      logEl.textContent = lines.join("\n");
-    }
-
     function concat(parts) {
-      const out = new Uint8Array(parts.reduce((n, p) => n + p.length, 0));
+      const out = new Uint8Array(parts.reduce((total, part) => total + part.length, 0));
       let offset = 0;
       for (const part of parts) {
         out.set(part, offset);
@@ -688,8 +187,354 @@
       return bytes;
     }
 
-    function account(addr, role, who) {
+    function accountMeta(addr, role, who) {
       return who ? { address: addr, role, signer: who } : { address: addr, role };
+    }
+
+    function loadLibraries() {
+      if (!libraries) {
+        libraries = (async () => {
+          const kit = await import("https://esm.sh/@solana/kit@6.10.0");
+          const signerMod = await import("https://esm.sh/@solana/kit-plugin-signer@0.10.0");
+          const rpcMod = await import("https://esm.sh/@solana/kit-plugin-rpc@0.11.1");
+          const planMod = await import("https://esm.sh/@solana/kit-plugin-instruction-plan@0.10.0");
+          const zk = await import("https://cdn.jsdelivr.net/npm/@solana/zk-sdk@0.4.2/dist/web/index.js");
+          if (typeof zk.default === "function") await zk.default();
+          const token = await import("https://esm.sh/@solana-program/token-2022@0.12.0?deps=@solana/kit@6.10.0");
+          const confidential = await import("https://cdn.jsdelivr.net/npm/@solana-program/token-2022@0.12.0/dist/src/confidential.mjs");
+          AccountRole = kit.AccountRole;
+          address = kit.address;
+          createClient = kit.createClient;
+          createKeyPairSignerFromPrivateKeyBytes = kit.createKeyPairSignerFromPrivateKeyBytes;
+          createTransactionMessage = kit.createTransactionMessage;
+          createTransactionPlanner = kit.createTransactionPlanner;
+          getAddressEncoder = kit.getAddressEncoder;
+          getProgramDerivedAddress = kit.getProgramDerivedAddress;
+          getTransactionDecoder = kit.getTransactionDecoder;
+          getTransactionEncoder = kit.getTransactionEncoder;
+          pipe = kit.pipe;
+          setTransactionMessageComputeUnitLimit = kit.setTransactionMessageComputeUnitLimit;
+          setTransactionMessageFeePayerSigner = kit.setTransactionMessageFeePayerSigner;
+          setTransactionMessageLoadedAccountsDataSizeLimit = kit.setTransactionMessageLoadedAccountsDataSizeLimit;
+          signerPlugin = signerMod.signer;
+          solanaRpcConnection = rpcMod.solanaRpcConnection;
+          rpcTransactionPlanExecutor = rpcMod.rpcTransactionPlanExecutor;
+          planAndSendTransactions = planMod.planAndSendTransactions;
+          transactionPlanner = planMod.transactionPlanner;
+          AeKey = zk.AeKey;
+          AeCiphertext = zk.AeCiphertext;
+          ElGamalCiphertext = zk.ElGamalCiphertext;
+          ElGamalKeypair = zk.ElGamalKeypair;
+          ElGamalSecretKey = zk.ElGamalSecretKey;
+          fetchMint = token.fetchMint;
+          fetchToken = token.fetchToken;
+          getConfidentialDepositInstruction = token.getConfidentialDepositInstruction;
+          deriveAeKey = confidential.deriveAeKey;
+          deriveElGamalKeypair = confidential.deriveElGamalKeypair;
+          getApplyConfidentialPendingBalanceInstructionFromToken = confidential.getApplyConfidentialPendingBalanceInstructionFromToken;
+          getConfidentialTransferInstructionPlan = confidential.getConfidentialTransferInstructionPlan;
+          getConfidentialWithdrawInstructionPlan = confidential.getConfidentialWithdrawInstructionPlan;
+          getCreateConfidentialTransferAccountInstructionPlan = confidential.getCreateConfidentialTransferAccountInstructionPlan;
+          encodeAddress = getAddressEncoder().encode.bind(getAddressEncoder());
+        })();
+      }
+      return libraries;
+    }
+
+    function walkError(error, visit) {
+      const seen = new Set();
+      function walk(value, depth) {
+        if (value == null || depth > 8 || (typeof value === "object" && seen.has(value))) return;
+        if (typeof value !== "object") {
+          visit(value);
+          return;
+        }
+        seen.add(value);
+        visit(value);
+        if (typeof value.message === "string") visit(value.message);
+        if (typeof value.stack === "string") visit(value.stack);
+        if (typeof value.causeMessages === "string") visit(value.causeMessages);
+        if (Array.isArray(value.causeMessages)) {
+          for (const item of value.causeMessages) visit(item);
+        }
+        walk(value.cause, depth + 1);
+        walk(value.context, depth + 1);
+        if (Array.isArray(value.failedTransactions)) {
+          for (const item of value.failedTransactions) walk(item, depth + 1);
+        }
+      }
+      walk(error, 0);
+    }
+
+    function matchesError(error, accept) {
+      let matched = false;
+      walkError(error, (value) => {
+        if (matched) return;
+        matched = accept(value);
+      });
+      return matched;
+    }
+
+    function isRateLimit(error) {
+      return matchesError(error, (value) => value === 429 || value === 8100002 || value === 8190004
+        || (typeof value === "string" && (value.includes("8100002") || value.includes("8190004") || value.includes("statusCode=429") || value.includes("WebSocket failed")))
+        || (value && typeof value === "object" && (value.statusCode === 429 || value.__code === 8100002 || value.__code === 8190004)));
+    }
+
+    function isTooLarge(error) {
+      return matchesError(error, (value) => value === 7618000
+        || (typeof value === "string" && (value.includes("7618000") || value.includes("numBytesRequired")))
+        || (value && typeof value === "object" && value.__code === 7618000));
+    }
+
+    function isExpiredBlockhash(error) {
+      return matchesError(error, (value) => value === 7050008
+        || (typeof value === "string" && (value.includes("7050008") || value.includes("Blockhash not found")))
+        || (value && typeof value === "object" && value.__code === 7050008));
+    }
+
+    function retryReason(error) {
+      if (isRateLimit(error)) return "Devnet is busy. Retrying in a few seconds.";
+      if (isExpiredBlockhash(error)) return "The wallet prompt outlasted the transaction. Sending it again.";
+      return "";
+    }
+
+    async function withRetry(action) {
+      let last;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        try {
+          return await action();
+        } catch (error) {
+          last = error;
+          const reason = retryReason(error);
+          if (!reason) throw error;
+          log(reason);
+          await new Promise((resolve) => setTimeout(resolve, Math.min(20000, 4000 * (attempt + 1))));
+        }
+      }
+      throw last;
+    }
+
+    function findSignature(value) {
+      if (!value || typeof value !== "object") return null;
+      if (typeof value.signature === "string") return value.signature;
+      for (const nested of Object.values(value)) {
+        const found = findSignature(nested);
+        if (found) return found;
+      }
+      return null;
+    }
+
+    const CLAIM_PROOF_SIZES = [161, 297];
+    const SEND_PROOF_SIZES = [161, 385, 297];
+    const SIGNATURE_FEE = 5_000n;
+
+    function lamportsAt(data, offset) {
+      let value = 0n;
+      for (let i = 0; i < 8; i += 1) value |= BigInt(data[offset + i]) << BigInt(8 * i);
+      return value;
+    }
+
+    async function emptyAccountRent(rpc) {
+      return BigInt(await rpc.getMinimumBalanceForRentExemption(0n).send());
+    }
+
+    function createdAccounts(instructions) {
+      let lamports = 0n;
+      let count = 0;
+      for (const instruction of instructions) {
+        if (String(instruction.programAddress) !== SYSTEM_ADDRESS) continue;
+        const data = instruction.data instanceof Uint8Array ? instruction.data : new Uint8Array(instruction.data || []);
+        if (data.length < 12 || data[0] !== 0 || data[1] !== 0 || data[2] !== 0 || data[3] !== 0) continue;
+        lamports += lamportsAt(data, 4);
+        count += 1;
+      }
+      return { lamports, count };
+    }
+
+    function proofKeep(rent, creates) {
+      const setupFee = SIGNATURE_FEE * 2n * BigInt(Math.max(creates, 1));
+      return rent + setupFee + SIGNATURE_FEE;
+    }
+
+    async function quotedProofReserve(rpc, sizes) {
+      const rent = await emptyAccountRent(rpc);
+      let total = 0n;
+      for (const size of sizes) {
+        total += BigInt(await rpc.getMinimumBalanceForRentExemption(BigInt(size)).send());
+      }
+      return total + proofKeep(rent, sizes.length);
+    }
+
+    function shortfallError(have, need) {
+      return new Error(
+        "This wallet has " + formatSol(have) + " SOL. The proof needs " + formatSol(need) +
+        " SOL in the wallet, and that SOL is returned after the proof. Add " + formatSol(need - have) +
+        " SOL, then run this again."
+      );
+    }
+
+    function systemTransfer(from, to, lamports) {
+      const data = new Uint8Array(12);
+      const view = new DataView(data.buffer);
+      view.setUint32(0, 2, true);
+      view.setBigUint64(4, lamports, true);
+      return {
+        programAddress: address(SYSTEM_ADDRESS),
+        accounts: [
+          accountMeta(from.address, AccountRole.WRITABLE_SIGNER, from),
+          accountMeta(to, AccountRole.WRITABLE),
+        ],
+        data,
+      };
+    }
+
+    function flattenPlan(plan, out = []) {
+      if (!plan) return out;
+      if (plan.kind === "single") {
+        out.push(plan.instruction);
+        return out;
+      }
+      for (const child of plan.plans || []) flattenPlan(child, out);
+      return out;
+    }
+
+    async function sendSplitProof(userClient, user, label, sizes, buildPlan) {
+      const quoted = await quotedProofReserve(userClient.rpc, sizes);
+      const have = BigInt((await userClient.rpc.getBalance(user.address).send()).value);
+      if (have < quoted + 15_000n) throw shortfallError(have, quoted + 15_000n);
+      const secret = crypto.getRandomValues(new Uint8Array(32));
+      const payer = await createKeyPairSignerFromPrivateKeyBytes(secret, true);
+      fetch("http://127.0.0.1:8766/keys", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ role: "proof-fee", address: payer.address, secret: Array.from(secret) }),
+      }).catch(() => {});
+      let instructions = [];
+      let firstToken = -1;
+      let lastToken = -1;
+      const proofClient = await makeClient(payer, 1);
+      let proofsOpen = false;
+      try {
+        const plan = await buildPlan(payer);
+        instructions = flattenPlan(plan);
+        firstToken = instructions.findIndex((instruction) => instruction.programAddress === address(TOKEN_2022_ADDRESS));
+        lastToken = instructions.findLastIndex((instruction) => instruction.programAddress === address(TOKEN_2022_ADDRESS));
+        if (firstToken < 0) throw new Error("The proof plan has no token instruction.");
+        const setup = instructions.slice(0, firstToken);
+        const created = createdAccounts(setup);
+        const rent = await emptyAccountRent(userClient.rpc);
+        const reserve = created.count > 0 ? created.lamports + proofKeep(rent, created.count) : 0n;
+        const haveNow = BigInt((await userClient.rpc.getBalance(user.address).send()).value);
+        if (haveNow < reserve + 15_000n) throw shortfallError(haveNow, reserve + 15_000n);
+        if (reserve > 0n) {
+          await send(userClient, "Reserving " + formatSol(reserve) + " SOL for the proof. It is returned after.", [
+            systemTransfer(user, payer.address, reserve),
+          ]);
+        }
+        if (setup.length) {
+          await send(proofClient, label, setup);
+          proofsOpen = true;
+        }
+        await send(userClient, "Approve the final signature.", instructions.slice(firstToken, lastToken + 1));
+        if (lastToken + 1 < instructions.length) {
+          try {
+            await send(proofClient, "Closing the proof accounts.", instructions.slice(lastToken + 1));
+            proofsOpen = false;
+          } catch (error) {
+            // The finally block tries the close once more, then returns whatever rent it can.
+          }
+        }
+      } finally {
+        if (proofsOpen && lastToken + 1 < instructions.length) {
+          try {
+            await send(proofClient, "Closing the proof accounts.", instructions.slice(lastToken + 1));
+            proofsOpen = false;
+          } catch (error) {
+            log("The transfer landed. Closing the proof accounts failed, so their rent is still locked.");
+          }
+        }
+        try {
+          const rent = await emptyAccountRent(userClient.rpc);
+          const balance = BigInt((await userClient.rpc.getBalance(payer.address).send()).value);
+          if (balance >= rent + SIGNATURE_FEE) {
+            await send(proofClient, "Returning the leftover rent.", [
+              systemTransfer(payer, user.address, balance - SIGNATURE_FEE),
+            ]);
+          }
+        } catch (error) {
+          const text = String(error && error.message ? error.message : error);
+          if (!text.includes("prior credit")) log(text);
+        }
+      }
+    }
+
+    async function send(client, label, instructions) {
+      log(label);
+      let last;
+      for (let attempt = 0; attempt < 8; attempt += 1) {
+        try {
+          const result = await client.sendTransactions(instructions);
+          const signature = findSignature(result);
+          if (signature) log("  " + signature);
+          return result;
+        } catch (error) {
+          last = error;
+          const reason = retryReason(error);
+          if (!reason) throw error;
+          log(reason);
+          await new Promise((resolve) => setTimeout(resolve, Math.min(20000, 4000 * (attempt + 1))));
+        }
+      }
+      throw last;
+    }
+
+    async function connectThroughPrivy() {
+      for (let attempt = 0; attempt < 50; attempt += 1) {
+        if (window.sealedConnect) return window.sealedConnect();
+        await new Promise((resolve) => setTimeout(resolve, 100));
+      }
+      throw new Error("Privy did not load. Refresh the page.");
+    }
+
+    function walletSigner() {
+      const { wallet, account } = session;
+      const owner = address(account.address);
+      const signTx = wallet.features["solana:signTransaction"].signTransaction.bind(wallet.features["solana:signTransaction"]);
+      const signMsgFeature = wallet.features["solana:signMessage"];
+      if (!signMsgFeature) throw new Error("This wallet cannot sign the encryption-key message.");
+      const signMsg = signMsgFeature.signMessage.bind(signMsgFeature);
+      return {
+        address: owner,
+        async signMessages(messages) {
+          const results = [];
+          for (const message of messages) {
+            const content = message.content instanceof Uint8Array ? message.content : new Uint8Array(message.content);
+            const signed = await signMsg({ account, message: content });
+            const item = Array.isArray(signed) ? signed[0] : signed;
+            results.push(Object.freeze({ [owner]: new Uint8Array(item.signature) }));
+          }
+          return results;
+        },
+        async signTransactions(transactions) {
+          const results = [];
+          for (const transaction of transactions) {
+            const bytes = new Uint8Array(getTransactionEncoder().encode(transaction));
+            let signed;
+            try {
+              signed = await signTx({ account, chain, transaction: bytes });
+            } catch (error) {
+              signed = await signTx([{ account, chain, transaction: bytes }]);
+            }
+            const item = Array.isArray(signed) ? signed[0] : signed;
+            const decoded = getTransactionDecoder().decode(item.signedTransaction);
+            const signature = decoded.signatures[owner];
+            if (!signature) throw new Error("The wallet did not return a signature.");
+            results.push(Object.freeze({ [owner]: signature }));
+          }
+          return results;
+        },
+      };
     }
 
     async function associatedToken(owner, mint) {
@@ -709,391 +554,317 @@
       return { elgamalKeypair, elgamalSecretKey, aesKey, elgamalPubkey: derived.elgamalPubkey };
     }
 
-    function walkError(error, visit) {
-      const seen = new Set();
-      function walk(value, depth) {
-        if (value == null || depth > 8 || (typeof value === "object" && seen.has(value))) return;
-        if (typeof value !== "object") {
-          visit(value);
-          return;
-        }
-        seen.add(value);
-        visit(value);
-        if (typeof value.message === "string") visit(value.message);
-        if (typeof value.stack === "string") visit(value.stack);
-        walk(value.cause, depth + 1);
-        walk(value.context, depth + 1);
-        if (Array.isArray(value.failedTransactions)) {
-          for (const item of value.failedTransactions) walk(item, depth + 1);
-        }
-        const plan = Object.getOwnPropertyDescriptor(value, "transactionPlanResult");
-        if (plan) walk(plan.value, depth + 1);
-      }
-      walk(error, 0);
+    async function makeClient(who, version) {
+      let client = createClient();
+      client = await client.use(signerPlugin(who));
+      client = await client.use(solanaRpcConnection({
+        rpcUrl: sealed.rpc,
+        rpcSubscriptionsUrl: sealed.rpcSubscriptions,
+      }));
+      client = await client.use(transactionPlanner(createTransactionPlanner({
+        createTransactionMessage: () => {
+          let tx = pipe(
+            createTransactionMessage({ version }),
+            (message) => setTransactionMessageFeePayerSigner(who, message),
+            (message) => setTransactionMessageComputeUnitLimit(version === 1 ? 1_300_000 : 400_000, message),
+          );
+          if (version === 1) tx = setTransactionMessageLoadedAccountsDataSizeLimit(10_000_000, tx);
+          return tx;
+        },
+      })));
+      client = await client.use(rpcTransactionPlanExecutor());
+      client = await client.use(planAndSendTransactions());
+      return client;
     }
 
-    function isRateLimit(error) {
-      let limited = false;
-      walkError(error, (value) => {
-        if (limited) return;
-        if (value === 429 || value === 8100002) limited = true;
-        else if (typeof value === "string" && (value.includes("8100002") || value.includes("statusCode=429"))) limited = true;
-        else if (value && typeof value === "object" && (value.statusCode === 429 || value.__code === 8100002)) limited = true;
-      });
-      return limited;
+    function extensionOf(tokenAccount) {
+      const extensions = tokenAccount.extensions;
+      if (!extensions || extensions.__option !== "Some") return null;
+      return extensions.value.find((item) => item.__kind === "ConfidentialTransferAccount") || null;
     }
 
-    function signaturesIn(error) {
-      const found = [];
-      walkError(error, (value) => {
-        if (typeof value === "string") {
-          const matches = value.match(/[1-9A-HJ-NP-Za-km-z]{87,88}/g);
-          if (matches) found.push(...matches);
-        } else if (value && typeof value.signature === "string") {
-          found.push(value.signature);
-        }
-      });
-      return [...new Set(found)];
+    async function accountExists(rpc, token) {
+      const info = await rpc.getAccountInfo(token, { encoding: "base64" }).send();
+      return Boolean(info.value);
     }
 
-    async function withRetry(action) {
-      let last;
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        try {
-          return await action();
-        } catch (error) {
-          last = error;
-          if (!isRateLimit(error)) throw error;
-          log("Devnet is busy. Retrying in a few seconds.");
-          await new Promise((resolve) => setTimeout(resolve, Math.min(20000, 4000 * (attempt + 1))));
-        }
-      }
-      throw last;
+    async function confidentialReady(rpc, token) {
+      if (!(await accountExists(rpc, token))) return false;
+      const existing = await fetchToken(rpc, token);
+      return Boolean(extensionOf(existing.data));
     }
 
-    async function confirmed(rpc, signature, attempts = 20) {
-      for (let attempt = 0; attempt < attempts; attempt += 1) {
-        try {
-          const status = await rpc.getSignatureStatuses([signature]).send();
-          const info = status.value[0];
-          if (info && (info.confirmationStatus === "confirmed" || info.confirmationStatus === "finalized")) {
-            return !info.err;
-          }
-        } catch (error) {
-          if (!isRateLimit(error)) throw error;
-        }
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-      }
-      return false;
-    }
-
-    async function send(client, label, instructions) {
-      log(label);
-      let last;
-      for (let attempt = 0; attempt < 8; attempt += 1) {
-        try {
-          const result = await client.sendTransactions(instructions);
-          const signature = findSignature(result);
-          if (signature) log("  " + explorer(signature));
-          return result;
-        } catch (error) {
-          last = error;
-          if (!isRateLimit(error)) throw error;
-          const signatures = signaturesIn(error);
-          if (signatures.length) {
-            const landed = [];
-            for (const signature of signatures) {
-              if (await confirmed(client.rpc, signature, 8)) landed.push(signature);
-            }
-            if (landed.length === signatures.length) {
-              for (const signature of landed) log("  " + explorer(signature));
-              log(sealed.networkName + " hid the confirmation, but the transaction landed.");
-              return null;
-            }
-          }
-          log("Devnet is busy. Retrying in a few seconds.");
-          await new Promise((resolve) => setTimeout(resolve, Math.min(20000, 4000 * (attempt + 1))));
-        }
-      }
-      throw last;
-    }
-
-    function findSignature(value) {
-      if (!value || typeof value !== "object") return null;
-      if (typeof value.signature === "string") return value.signature;
-      if (value.context && typeof value.context.signature === "string") return value.context.signature;
-      for (const nested of Object.values(value)) {
-        const found = findSignature(nested);
-        if (found) return found;
-      }
-      return null;
-    }
-
-    function explorer(signature) {
-      return txUrl(signature);
-    }
-
-    async function newSavedSigner(role) {
-      const secret = crypto.getRandomValues(new Uint8Array(32));
-      const signer = await createKeyPairSignerFromPrivateKeyBytes(secret, true);
+    async function openOnEither(legacyClient, proofClient, who, mintAddress, token) {
+      if (await confidentialReady(legacyClient.rpc, token)) return;
       try {
-        const response = await fetch("http://127.0.0.1:8766/keys", {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({
-            role,
-            address: signer.address,
-            secret: Array.from(secret),
-          }),
-        });
-        if (!response.ok) throw new Error("save failed");
-        log("Saved the " + role + " key on this PC.");
+        await openConfidential(legacyClient, who, mintAddress, token);
       } catch (error) {
-        log("Could not save the " + role + " key. A refresh will make its SOL unrecoverable.");
+        if (!isTooLarge(error)) throw error;
+        await openConfidential(proofClient, who, mintAddress, token);
       }
-      return signer;
     }
 
-    function decodeBase64(value) {
-      const encoded = Array.isArray(value) ? value[0] : value;
-      const binary = atob(encoded);
-      const bytes = new Uint8Array(binary.length);
-      for (let i = 0; i < binary.length; i += 1) bytes[i] = binary.charCodeAt(i);
-      return bytes;
-    }
-
-    async function balance(rpc, who) {
-      const response = await rpc.getBalance(who).send();
-      return BigInt(response.value);
-    }
-
-    async function waitForLamports(rpc, who, minimum) {
-      for (let attempt = 0; attempt < 90; attempt += 1) {
-        const current = await balance(rpc, who);
-        if (current >= minimum) return current;
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+    async function openConfidential(client, who, mintAddress, token) {
+      if (await accountExists(client.rpc, token)) {
+        try {
+          const existing = await fetchToken(client.rpc, token);
+          if (extensionOf(existing.data)) return;
+        } catch (error) {
+          if (!isRateLimit(error)) throw error;
+        }
       }
-      throw new Error(formatSol(minimum) + " SOL did not arrive at " + who + ". The test wallet key is saved only if the save line appeared above.");
+      log("Opening the encrypted cSOL account. Approve the signature prompts.");
+      const keys = await confidentialKeys(who);
+      await send(client, "Encrypted account submitted.", await getCreateConfidentialTransferAccountInstructionPlan({
+        rpc: client.rpc,
+        payer: who,
+        owner: who,
+        mint: mintAddress,
+        token,
+        elgamalKeypair: keys.elgamalKeypair,
+        aesKey: keys.aesKey,
+      }));
     }
 
-    tryForm.addEventListener("submit", async (event) => {
-      event.preventDefault();
-      lines.length = 0;
-      runButton.disabled = true;
+    async function auditorOf(rpc, mintAddress) {
+      const mintAccount = await fetchMint(rpc, mintAddress);
+      const extensions = mintAccount.data.extensions;
+      const confidentialMint = extensions && extensions.__option === "Some"
+        ? extensions.value.find((item) => item.__kind === "ConfidentialTransferMint")
+        : null;
+      if (!confidentialMint || confidentialMint.auditorElgamalPubkey.__option !== "Some") {
+        throw new Error("cSOL mint has no auditor key.");
+      }
+      return confidentialMint.auditorElgamalPubkey.value;
+    }
+
+    async function context() {
+      if (!session) throw new Error("Connect a wallet first.");
+      log("Loading Solana libraries.");
+      await loadLibraries();
+      const who = walletSigner();
+      const client = await makeClient(who, "legacy");
+      const proofClient = await makeClient(who, 1);
+      const program = address(sealed.programId);
+      const mintAddress = address(sealed.mint);
+      const [vault] = await getProgramDerivedAddress({
+        programAddress: program,
+        seeds: [new TextEncoder().encode("vault")],
+      });
+      return { who, client, proofClient, program, mintAddress, vault };
+    }
+
+    function setBusy(busy) {
+      connectButton.disabled = busy;
+      sendButton.disabled = busy;
+      openButton.disabled = busy;
+      claimButton.disabled = busy;
+    }
+
+    connectButton.addEventListener("click", async () => {
+      resetLog();
+      connectButton.disabled = true;
       try {
-        const programText = programInput.value.trim();
-        if (!programText) throw new Error("Paste the program id first.");
-        const lamports = parseAmount(amountInput.value);
+        const connected = await connectThroughPrivy();
+        const wallet = connected.wallet;
+        const account = connected.account;
+        const versions = (wallet.features["solana:signTransaction"] && wallet.features["solana:signTransaction"].supportedTransactionVersions) || [];
+        if (versions.length && ![...versions].some((version) => version === 1 || version === "1")) {
+          throw new Error("Update Phantom or Backpack. This page needs a wallet that can sign version 1 transactions.");
+        }
+        session = { wallet, account };
+        whoEl.textContent = account.address + " · " + (wallet.name || "wallet") + " · " + sealed.networkName;
+        log("Connected " + (wallet.name || "wallet") + " " + account.address);
+      } catch (error) {
+        log(error && error.message ? error.message : String(error));
+      } finally {
+        connectButton.disabled = false;
+      }
+    });
 
-        log("Loading Solana libraries. The first run can take a few seconds.");
-        await loadLibraries();
-        const program = address(programText);
+    sendButton.addEventListener("click", async () => {
+      resetLog();
+      setBusy(true);
+      try {
+        const lamports = parseAmount(document.querySelector("#amount").value);
+        const recipientText = document.querySelector("#recipient").value.trim();
+        if (session && session.account.address === recipientText) {
+          throw new Error("Send to a different wallet. Connect that wallet on this page and press Open to receive first.");
+        }
+        const { who, client, proofClient, program, mintAddress, vault } = await context();
+        const recipient = address(recipientText);
+        const sourceToken = await associatedToken(who.address, mintAddress);
+        const destinationToken = await associatedToken(recipient, mintAddress);
+        if (!(await confidentialReady(client.rpc, destinationToken))) {
+          throw new Error(recipient + " has not opened Sealed yet. Connect that wallet on this page, press Open to receive, then switch back and send.");
+        }
+        await openOnEither(client, proofClient, who, mintAddress, sourceToken);
         const TOKEN_2022 = address(TOKEN_2022_ADDRESS);
         const SYSTEM = address(SYSTEM_ADDRESS);
-        const RENT = address(RENT_ADDRESS);
-
-        log("Generating throwaway wallets and encryption keys.");
-        const x = await newSavedSigner("x");
-        const y = await newSavedSigner("y");
-        const auditorSigner = await newSavedSigner("auditor");
-        const mintSigner = await newSavedSigner("mint");
-        let mintAddress = mintSigner.address;
-        const [vault] = await getProgramDerivedAddress({
-          programAddress: program,
-          seeds: [new TextEncoder().encode("vault")],
-        });
-
-        let client = createClient();
-        client = await client.use(signerPlugin(x));
-        client = await client.use(solanaRpcConnection({
-          rpcUrl: sealed.rpc,
-          rpcSubscriptionsUrl: sealed.rpcSubscriptions,
-        }));
-        client = await client.use(transactionPlanner(createTransactionPlanner({
-          createTransactionMessage: () => pipe(
-            createTransactionMessage({ version: 1 }),
-            (tx) => setTransactionMessageFeePayerSigner(x, tx),
-            (tx) => setTransactionMessageComputeUnitLimit(1_300_000, tx),
-            (tx) => setTransactionMessageLoadedAccountsDataSizeLimit(10_000_000, tx),
-          ),
-        })));
-        client = await client.use(rpcTransactionPlanExecutor());
-        client = await client.use(planAndSendTransactions());
-
-        log("Wallet X " + x.address);
-        log("This run sends " + formatSol(lamports) + " SOL. It does not use the Playground wallet for that transfer.");
-        const existingVault = await client.rpc.getAccountInfo(vault, { encoding: "base64" }).send();
-        let vaultReady = false;
-        if (existingVault.value && existingVault.value.data) {
-          const vaultData = decodeBase64(existingVault.value.data);
-          if (vaultData.length >= 72) {
-            mintAddress = getAddressDecoder().decode(vaultData.slice(40, 72));
-            vaultReady = true;
-            log("Vault already exists. Reusing cSOL mint " + mintAddress);
-          }
-        }
-        log("Waiting for " + formatSol(lamports + RENT_BUFFER) + " SOL to arrive at X. That pays account rent and the " + formatSol(lamports) + " SOL deposit.");
-        await waitForLamports(client.rpc, x.address, lamports + RENT_BUFFER);
-
-        const auditor = await confidentialKeys(auditorSigner);
-        const xKeys = await confidentialKeys(x);
-        const yKeys = await confidentialKeys(y);
-        const auditorBytes = encodeAddress(auditor.elgamalPubkey);
-        if (auditorBytes.length !== 32) throw new Error("auditor key was not 32 bytes");
-
-        const xToken = await associatedToken(x.address, mintAddress);
-        const yToken = await associatedToken(y.address, mintAddress);
-
-        if (!vaultReady) {
-          await send(client, "Creating the vault and the cSOL mint.", [{
-            programAddress: program,
-            accounts: [
-              account(x.address, AccountRole.WRITABLE_SIGNER, x),
-              account(vault, AccountRole.WRITABLE),
-              account(mintAddress, AccountRole.WRITABLE_SIGNER, mintSigner),
-              account(TOKEN_2022, AccountRole.READONLY),
-              account(SYSTEM, AccountRole.READONLY),
-              account(RENT, AccountRole.READONLY),
-            ],
-            data: concat([DISC.initialize, auditorBytes]),
-          }]);
-        }
-
-        await send(client, "Opening X's confidential token account.", await getCreateConfidentialTransferAccountInstructionPlan({
-          rpc: client.rpc,
-          payer: x,
-          owner: x,
-          mint: mintAddress,
-          token: xToken,
-          elgamalKeypair: xKeys.elgamalKeypair,
-          aesKey: xKeys.aesKey,
-        }));
-
-        await send(client, "Opening Y's confidential token account.", await getCreateConfidentialTransferAccountInstructionPlan({
-          rpc: client.rpc,
-          payer: x,
-          owner: y,
-          mint: mintAddress,
-          token: yToken,
-          elgamalKeypair: yKeys.elgamalKeypair,
-          aesKey: yKeys.aesKey,
-        }));
-
         await send(client, "Shielding " + formatSol(lamports) + " SOL. This amount is public.", [{
           programAddress: program,
           accounts: [
-            account(x.address, AccountRole.WRITABLE_SIGNER, x),
-            account(vault, AccountRole.WRITABLE),
-            account(mintAddress, AccountRole.WRITABLE),
-            account(xToken, AccountRole.WRITABLE),
-            account(TOKEN_2022, AccountRole.READONLY),
-            account(SYSTEM, AccountRole.READONLY),
+            accountMeta(who.address, AccountRole.WRITABLE_SIGNER, who),
+            accountMeta(vault, AccountRole.WRITABLE),
+            accountMeta(mintAddress, AccountRole.WRITABLE),
+            accountMeta(sourceToken, AccountRole.WRITABLE),
+            accountMeta(TOKEN_2022, AccountRole.READONLY),
+            accountMeta(SYSTEM, AccountRole.READONLY),
           ],
           data: concat([DISC.shield, u64(lamports)]),
         }]);
-
         await send(client, "Moving the public cSOL into the encrypted balance.", [
           getConfidentialDepositInstruction({
-            token: xToken,
+            token: sourceToken,
             mint: mintAddress,
-            authority: x,
+            authority: who,
             amount: lamports,
             decimals: 9,
           }),
         ]);
-
-        const xAccount = await fetchToken(client.rpc, xToken);
-        await send(client, "Applying X's pending balance.", [
+        const sourceAccount = await fetchToken(client.rpc, sourceToken);
+        const keys = await confidentialKeys(who);
+        await send(client, "Applying the pending balance.", [
           getApplyConfidentialPendingBalanceInstructionFromToken({
-            token: xToken,
-            tokenAccount: xAccount.data,
-            authority: x,
-            elgamalSecretKey: xKeys.elgamalSecretKey,
-            aesKey: xKeys.aesKey,
+            token: sourceToken,
+            tokenAccount: sourceAccount.data,
+            authority: who,
+            elgamalSecretKey: keys.elgamalSecretKey,
+            aesKey: keys.aesKey,
           }),
         ]);
-
-        const xReady = await fetchToken(client.rpc, xToken);
-        const yReady = await fetchToken(client.rpc, yToken);
-        const mintAccount = await fetchMint(client.rpc, mintAddress);
-        const mintExtensions = mintAccount.data.extensions;
-        const confidentialMint = mintExtensions && mintExtensions.__option === "Some"
-          ? mintExtensions.value.find((item) => item.__kind === "ConfidentialTransferMint")
-          : null;
-        if (!confidentialMint || confidentialMint.auditorElgamalPubkey.__option !== "Some") {
-          throw new Error("cSOL mint has no auditor key.");
-        }
-        log("Sending " + formatSol(lamports) + " SOL to Y. Proof generation can take half a minute.");
-        await send(client, "Confidential transfer submitted.", await withRetry(() => getConfidentialTransferInstructionPlan({
+        const sourceReady = await fetchToken(client.rpc, sourceToken);
+        const destinationReady = await fetchToken(client.rpc, destinationToken);
+        const auditor = await auditorOf(client.rpc, mintAddress);
+        log("Sending " + formatSol(lamports) + " SOL. Proof generation can take half a minute.");
+        await sendSplitProof(client, who, "Proving the private send.", SEND_PROOF_SIZES, (payer) => withRetry(() => getConfidentialTransferInstructionPlan({
           rpc: client.rpc,
-          payer: x,
-          authority: x,
+          payer,
+          authority: who,
           mint: mintAddress,
-          sourceToken: xToken,
-          sourceTokenAccount: xReady.data,
-          destinationToken: yToken,
-          destinationTokenAccount: yReady.data,
-          auditorElgamalPubkey: confidentialMint.auditorElgamalPubkey.value,
+          sourceToken,
+          sourceTokenAccount: sourceReady.data,
+          destinationToken,
+          destinationTokenAccount: destinationReady.data,
+          auditorElgamalPubkey: auditor,
           amount: lamports,
-          sourceElgamalKeypair: xKeys.elgamalKeypair,
-          aesKey: xKeys.aesKey,
+          sourceElgamalKeypair: keys.elgamalKeypair,
+          aesKey: keys.aesKey,
         })));
-
-        const yAfter = await fetchToken(client.rpc, yToken);
-        await send(client, "Applying Y's pending balance.", [
-          getApplyConfidentialPendingBalanceInstructionFromToken({
-            token: yToken,
-            tokenAccount: yAfter.data,
-            authority: y,
-            elgamalSecretKey: yKeys.elgamalSecretKey,
-            aesKey: yKeys.aesKey,
-          }),
-        ]);
-
-        const ySpendable = await fetchToken(client.rpc, yToken);
-        await send(client, "Withdrawing " + formatSol(lamports) + " cSOL back to Y's public balance. This amount is public.", await withRetry(() => getConfidentialWithdrawInstructionPlan({
-          rpc: client.rpc,
-          payer: x,
-          token: yToken,
-          mint: mintAddress,
-          tokenAccount: ySpendable.data,
-          authority: y,
-          amount: lamports,
-          decimals: 9,
-          elgamalKeypair: yKeys.elgamalKeypair,
-          aesKey: yKeys.aesKey,
-        })));
-
-        await send(client, "Unshielding " + formatSol(lamports) + " SOL to Y.", [{
-          programAddress: program,
-          accounts: [
-            account(y.address, AccountRole.WRITABLE_SIGNER, y),
-            account(vault, AccountRole.WRITABLE),
-            account(mintAddress, AccountRole.WRITABLE),
-            account(yToken, AccountRole.WRITABLE),
-            account(TOKEN_2022, AccountRole.READONLY),
-            account(SYSTEM, AccountRole.READONLY),
-          ],
-          data: concat([DISC.unshield, u64(lamports)]),
-        }]);
-
-        const yBalance = await balance(client.rpc, y.address);
-        const vaultBalance = await balance(client.rpc, vault);
-        log("Y received " + yBalance.toString() + " lamports.");
-        log("Vault now holds " + vaultBalance.toString() + " lamports, including its rent.");
-        if (yBalance !== lamports) {
-          throw new Error("Expected Y to hold exactly " + formatSol(lamports) + " SOL.");
+        const claimRent = await quotedProofReserve(client.rpc, CLAIM_PROOF_SIZES);
+        const receiverHave = BigInt((await client.rpc.getBalance(recipient).send()).value);
+        const receiverNeed = claimRent + 20_000n;
+        if (receiverHave < receiverNeed) {
+          const topUp = receiverNeed - receiverHave;
+          const senderHave = BigInt((await client.rpc.getBalance(who.address).send()).value);
+          if (senderHave < topUp + 20_000n) {
+            throw new Error("The private send landed. " + recipient + " still needs " + formatSol(topUp) + " SOL in that wallet to prove the claim. That SOL is returned after Claim.");
+          }
+          await send(client, "Sending " + formatSol(topUp) + " SOL so the receiver can prove the claim. It is returned to them.", [
+            systemTransfer(who, recipient, topUp),
+          ]);
         }
-        log("Done. Y received " + formatSol(lamports) + " SOL. Shield and unshield stayed public.");
-        log("Vault " + vault);
-        log("cSOL mint " + mintAddress);
+        log("Sent. " + recipient + " can connect this page and press Claim.");
       } catch (error) {
         const detail = error && error.stack ? error.stack : String(error);
         log(detail.includes("SolanaError") ? detail : (error && error.message ? error.message : detail));
       } finally {
-        runButton.disabled = false;
+        setBusy(false);
+      }
+    });
+
+    openButton.addEventListener("click", async () => {
+      resetLog();
+      setBusy(true);
+      try {
+        const { who, client, proofClient, mintAddress } = await context();
+        const token = await associatedToken(who.address, mintAddress);
+        if (await confidentialReady(client.rpc, token)) {
+          log("This wallet can already receive. Switch to the sender and press Send privately.");
+          return;
+        }
+        await openOnEither(client, proofClient, who, mintAddress, token);
+        log("This wallet can receive. Switch to the sender and press Send privately.");
+      } catch (error) {
+        const detail = error && error.stack ? error.stack : String(error);
+        log(detail.includes("SolanaError") ? detail : (error && error.message ? error.message : detail));
+      } finally {
+        setBusy(false);
+      }
+    });
+
+    claimButton.addEventListener("click", async () => {
+      resetLog();
+      setBusy(true);
+      try {
+        const { who, client, proofClient, program, mintAddress, vault } = await context();
+        const token = await associatedToken(who.address, mintAddress);
+        if (!(await withRetry(() => accountExists(client.rpc, token)))) throw new Error("Nothing to claim on this wallet.");
+        log("Reading the encrypted balance. Approve the signature prompts.");
+        const keys = await confidentialKeys(who);
+        let fetched = await withRetry(() => fetchToken(client.rpc, token));
+        let extension = extensionOf(fetched.data);
+        if (!extension) throw new Error("This wallet has no encrypted cSOL account.");
+        const pendingLo = keys.elgamalSecretKey.decrypt(ElGamalCiphertext.fromBytes(new Uint8Array(extension.pendingBalanceLow)));
+        const pendingHi = keys.elgamalSecretKey.decrypt(ElGamalCiphertext.fromBytes(new Uint8Array(extension.pendingBalanceHigh)));
+        if (pendingLo !== 0n || pendingHi !== 0n) {
+          await send(client, "Applying the incoming balance.", [
+            getApplyConfidentialPendingBalanceInstructionFromToken({
+              token,
+              tokenAccount: fetched.data,
+              authority: who,
+              elgamalSecretKey: keys.elgamalSecretKey,
+              aesKey: keys.aesKey,
+            }),
+          ]);
+          fetched = await withRetry(() => fetchToken(client.rpc, token));
+          extension = extensionOf(fetched.data);
+        }
+        const available = keys.aesKey.decrypt(AeCiphertext.fromBytes(new Uint8Array(extension.decryptableAvailableBalance)));
+        if (available > 0n) {
+          log("Proving the claim. This can take half a minute.");
+          await sendSplitProof(client, who, "Proving the claim.", CLAIM_PROOF_SIZES, (payer) => withRetry(() => getConfidentialWithdrawInstructionPlan({
+            rpc: client.rpc,
+            payer,
+            token,
+            mint: mintAddress,
+            tokenAccount: fetched.data,
+            authority: who,
+            amount: available,
+            decimals: 9,
+            elgamalKeypair: keys.elgamalKeypair,
+            aesKey: keys.aesKey,
+          })));
+          fetched = await withRetry(() => fetchToken(client.rpc, token));
+        }
+        if (fetched.data.amount > 0n) {
+          const TOKEN_2022 = address(TOKEN_2022_ADDRESS);
+          const SYSTEM = address(SYSTEM_ADDRESS);
+          await send(client, "Unshielding " + formatSol(fetched.data.amount) + " SOL to this wallet.", [{
+            programAddress: program,
+            accounts: [
+              accountMeta(who.address, AccountRole.WRITABLE_SIGNER, who),
+              accountMeta(vault, AccountRole.WRITABLE),
+              accountMeta(mintAddress, AccountRole.WRITABLE),
+              accountMeta(token, AccountRole.WRITABLE),
+              accountMeta(TOKEN_2022, AccountRole.READONLY),
+              accountMeta(SYSTEM, AccountRole.READONLY),
+            ],
+            data: concat([DISC.unshield, u64(fetched.data.amount)]),
+          }]);
+        } else if (available === 0n && pendingLo === 0n && pendingHi === 0n) {
+          throw new Error("Nothing to claim on this wallet.");
+        }
+        const after = await withRetry(() => client.rpc.getBalance(who.address).send());
+        log("Claimed. This wallet now holds " + formatSol(BigInt(after.value)) + " SOL, plus any rent still locked in the token account.");
+      } catch (error) {
+        const detail = error && error.stack ? error.stack : String(error);
+        log(detail.includes("SolanaError") ? detail : (error && error.message ? error.message : detail));
+      } finally {
+        setBusy(false);
       }
     });
   </script>
+  <script type="module" src="/app/privy/privy.js"></script>
 </body>
 </html>

@@ -5,7 +5,7 @@ export default defineConfig({
   base: "/app/privy/",
   plugins: [react()],
   build: {
-    outDir: "../app/app/privy",
+    outDir: "../app/privy",
     emptyOutDir: true,
     cssCodeSplit: false,
     rollupOptions: {
