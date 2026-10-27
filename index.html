@@ -276,6 +276,14 @@
       white-space: pre-wrap;
       word-break: break-word;
     }
+    .ca {
+      display: block;
+      margin: 10px 0 0;
+      color: var(--mute);
+      font-family: var(--mono);
+      font-size: 13px;
+      overflow-wrap: anywhere;
+    }
     footer { padding: 28px 0 48px; color: var(--dim); font-size: 13px; }
     @keyframes drift {
       from { transform: translateY(20px); opacity: 0; }
@@ -326,6 +334,7 @@
         <a class="pill" href="/app">launch app</a>
       </nav>
     </header>
+    <a class="ca" id="token-ca">CA: xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxpump</a>
 
     <section class="hero" id="top">
       <div class="glyphs" id="glyphs"></div>
@@ -426,6 +435,12 @@
   </div>
   <script src="deployment.js"></script>
   <script>
+    const tokenCa = document.querySelector("#token-ca");
+    if (tokenCa) {
+      const mint = tokenCa.textContent.replace(/^CA:\s*/, "").trim();
+      tokenCa.href = "https://pump.fun/coin/" + mint;
+    }
+
     const site = window.SEALED;
     if (!site) throw new Error("deployment.js did not load");
 
