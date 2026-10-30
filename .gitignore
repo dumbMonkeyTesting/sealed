@@ -5,3 +5,6 @@ node_modules/
 **/*.keypair.json
 **/*keypair*.json
 test-keys/
+
+# Local mainnet paste for Playground. Same program as lib.rs, kept off GitHub.
+programs/sealed/src/lib.mainnet.rs

@@ -386,7 +386,7 @@
 
     <section id="live">
       <h2 id="live-title">on this network, right now</h2>
-      <p class="lede" id="live-lede">These are the accounts from the working program. The vault balance is read when this page loads.</p>
+      <p class="lede" id="live-lede">These are the accounts from the working program. The vault balance is read from devnet.</p>
       <div class="facts">
         <div class="fact"><span>VAULT SOL</span><strong id="vault-balance">…</strong></div>
         <div class="fact"><span>NETWORK</span><strong id="network-name">…</strong></div>
@@ -473,7 +473,7 @@
     }
 
     document.querySelector("#ledger-hint").textContent = "Illustrated. The real " + site.networkName + " transfer is in the proof below.";
-    document.querySelector("#proof-lede").textContent = "This txn moved " + site.proof.amountSol + " SOL from wallet X to wallet Y on " + site.networkName + ". Open the private send: the accounts, the fee, and the time are there. The amount is not. Shield and unshield name " + site.proof.amountSol + " SOL because those two steps are the public border.";
+    document.querySelector("#proof-lede").textContent = "This txn moved " + site.proof.amountSol + " SOL from wallet X to wallet Y on " + site.networkName + ". Open the private send: the accounts, the fee, and the time are there. The amount is not. The amount of SOL was shielded and then unshielded to hide it.";
     const proofList = document.querySelector("#proof-list");
     const publicTag = site.proof.amountSol + " SOL public";
     if (site.proof.privateSend) {
@@ -486,7 +486,7 @@
       proofList.append(proofCard(txUrl(site.proof.unshield), "unshield back to Y", shortId(site.proof.unshield), publicTag, false));
     }
     document.querySelector("#live-title").textContent = "on " + site.networkName + ", right now";
-    document.querySelector("#live-lede").textContent = "These are the accounts from the working program. The vault balance is read from " + site.networkName + " when this page loads.";
+    document.querySelector("#live-lede").textContent = "These are the accounts from the working program. The vault balance is read from " + site.networkName + ".";
     document.querySelector("#network-name").textContent = site.networkLabel;
     document.querySelector("#vault-address").textContent = site.vault;
     document.querySelector("#mint-address").textContent = site.mint;
